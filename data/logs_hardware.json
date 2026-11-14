@@ -1,0 +1,17 @@
+[
+  { "id_evento": "EVT-001", "cofre_id": "COFRE-01", "timestamp": "2026-11-14T13:55:00-03:00", "tipo": "LEITURA_TEMPERATURA", "temperatura_celsius": 5.0 },
+  { "id_evento": "EVT-002", "cofre_id": "COFRE-01", "timestamp": "2026-11-14T14:00:00-03:00", "tipo": "PORTA_ABERTA", "usuario_biometria_id": "USR-0042" },
+  { "id_evento": "EVT-003", "cofre_id": "COFRE-01", "timestamp": "2026-11-14T14:05:00-03:00", "tipo": "LEITURA_TEMPERATURA", "temperatura_celsius": 7.6 },
+  { "id_evento": "EVT-004", "cofre_id": "COFRE-01", "timestamp": "2026-11-14T14:10:00-03:00", "tipo": "LEITURA_TEMPERATURA", "temperatura_celsius": 9.1 },
+  { "id_evento": "EVT-005", "cofre_id": "COFRE-01", "timestamp": "2026-11-14T14:15:00-03:00", "tipo": "LEITURA_TEMPERATURA", "temperatura_celsius": 10.4 },
+  { "id_evento": "EVT-006", "cofre_id": "COFRE-01", "timestamp": "2026-11-14T14:20:00-03:00", "tipo": "LEITURA_TEMPERATURA", "temperatura_celsius": 11.2 },
+  { "id_evento": "EVT-007", "cofre_id": "COFRE-01", "timestamp": "2026-11-14T14:25:00-03:00", "tipo": "LEITURA_TEMPERATURA", "temperatura_celsius": 12.0 },
+  { "id_evento": "EVT-008", "cofre_id": "COFRE-01", "timestamp": "2026-11-14T14:30:00-03:00", "tipo": "LEITURA_TEMPERATURA", "temperatura_celsius": 12.6 },
+  { "id_evento": "EVT-009", "cofre_id": "COFRE-01", "timestamp": "2026-11-14T14:35:00-03:00", "tipo": "LEITURA_TEMPERATURA", "temperatura_celsius": 13.0 },
+  { "id_evento": "EVT-010", "cofre_id": "COFRE-01", "timestamp": "2026-11-14T14:40:00-03:00", "tipo": "LEITURA_TEMPERATURA", "temperatura_celsius": 13.0 },
+  { "id_evento": "EVT-011", "cofre_id": "COFRE-01", "timestamp": "2026-11-14T14:45:00-03:00", "tipo": "PORTA_FECHADA" },
+  { "id_evento": "EVT-012", "cofre_id": "COFRE-01", "timestamp": "2026-11-14T14:50:00-03:00", "tipo": "LEITURA_TEMPERATURA", "temperatura_celsius": 11.8 },
+  { "id_evento": "EVT-013", "cofre_id": "COFRE-01", "timestamp": "2026-11-14T14:55:00-03:00", "tipo": "LEITURA_TEMPERATURA", "temperatura_celsius": 9.4 },
+  { "id_evento": "EVT-014", "cofre_id": "COFRE-01", "timestamp": "2026-11-14T15:00:00-03:00", "tipo": "LEITURA_TEMPERATURA", "temperatura_celsius": 7.5 },
+  { "id_evento": "EVT-015", "cofre_id": "COFRE-01", "timestamp": "2026-11-14T15:05:00-03:00", "tipo": "LEITURA_TEMPERATURA", "temperatura_celsius": 6.2 }
+]
