@@ -1,22 +1,28 @@
 :root {
   color-scheme: light;
-  --paper: #f3f5ef;
-  --ink: #1d2925;
-  --muted: #708078;
-  --line: #dce3dc;
-  --green: #245c49;
-  --green-dark: #193e33;
-  --lime: #d9e88c;
-  --coral: #c26750;
-  --blue: #547988;
-  --white: #fff;
+  --cor-primaria: #1f5a62;
+  --cor-critico: #a23c39;
+  --cor-atencao: #a76722;
+  --cor-ok: #34704e;
+  --fundo: #f3f5f4;
+  --superficie: #fff;
+  --superficie-secundaria: #edf1ef;
+  --cor-texto: #202c31;
+  --texto-secundario: #617077;
+  --borda: #d9e0df;
+  --espaco-1: 4px;
+  --espaco-2: 8px;
+  --espaco-3: 12px;
+  --espaco-4: 20px;
+  --espaco-5: 32px;
 }
 
-* { box-sizing: border-box; }
+*, *::before, *::after { box-sizing: border-box; }
 html, body { min-height: 100%; margin: 0; }
+html { scroll-behavior: smooth; }
 body {
-  color: var(--ink);
-  background: var(--paper);
+  color: var(--cor-texto);
+  background: var(--fundo);
   font-family: "Trebuchet MS", "Segoe UI", sans-serif;
   -webkit-font-smoothing: antialiased;
 }
@@ -24,4 +30,21 @@ button, input, select { font: inherit; }
 button, select { color: inherit; }
 button { cursor: pointer; }
 a { color: inherit; text-decoration: none; }
-::selection { color: var(--green-dark); background: var(--lime); }
+:focus-visible { outline: 3px solid #e3aa53; outline-offset: 3px; }
+::selection { color: #fff; background: var(--cor-primaria); }
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --cor-primaria: #8bc7c6;
+    --cor-critico: #f0847b;
+    --cor-atencao: #e9b46b;
+    --cor-ok: #82c69a;
+    --fundo: #141a1d;
+    --superficie: #1d2529;
+    --superficie-secundaria: #273237;
+    --cor-texto: #edf2f2;
+    --texto-secundario: #b3c0c2;
+    --borda: #3b494d;
+  }
+}

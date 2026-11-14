@@ -1,36 +1,26 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Medical Security x Bulário Anvisa
 
-## Getting Started
+Painel web para exibir a análise operacional devolvida pelo endpoint local `GET /api/analise`.
 
-First, run the development server:
+## Executar
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abra `http://localhost:3000`. O endpoint aceita `data_referencia` opcional em ISO 8601, por exemplo `GET /api/analise?data_referencia=2026-11-14T15:30:00-03:00`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Dados e processamento
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+A rota `src/app/api/analise/route.ts` e a página consultam o mesmo serviço server-only em `src/lib/servico-analise.ts`. Esse serviço lê `data/bulas.json`, `data/logs_hardware.json` e `data/estoque_cofre.json`, executa `src/lib/analise.ts` e produz `AnaliseResponse`, tipado em `src/types/dominio.ts`.
 
-## Learn More
+A interface apresenta os valores e justificativas da análise sem recalcular o estoque. Os arquivos JSON em `data/` são entradas do processamento e devem permanecer disponíveis.
 
-To learn more about Next.js, take a look at the following resources:
+## Verificações
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm run lint
+npm test
+npm run build
+```

@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Einsan | Inteligência de estoque",
-  description: "Protótipo demonstrativo de previsão e reposição de estoque.",
+  title: "Medical Security x Bulário Anvisa",
+  description: "Análise operacional de eventos térmicos, movimentação e recomendações de estoque.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
