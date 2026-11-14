@@ -1,0 +1,9 @@
+export type Med = { id: string; nome: string; cat: string; fab: string; desc: string; un: string; temp: string; estoque: number; min: number; seg: number; consumo: number; prazo: number; preco: number };
+export type Lote = { id: string; medId: string; lote: string; qtd: number; fab: string; val: string };
+export type Mov = { id: string; medId: string; tipo: 'Entrada' | 'Saída' | 'Transferência' | 'Ajuste'; qtd: number; data: string; lote: string; resp: string };
+export type Disp = 'Alta' | 'Média' | 'Baixa';
+export type Forn = { id: string; nome: string; cnpj: string; pagamento: string; pontual: number; hist: string; itens: { medId: string; preco: number; prazo: number; disp: Disp }[] };
+export type Serie = { mes: string; consumo: number; entradas: number; saidas: number; valor: number };
+export type Prev = { d: string; real: number | null; prev: number | null; estoque: number | null; seg: number };
+export type Rec = { medId: string; urgente: boolean; dataCompra: string; qtd: number; prev30: number; diasRuptura: number; fornId: string; justificativa: string };
+export type Tone = 'ok' | 'warn' | 'crit' | 'info' | 'mute';
