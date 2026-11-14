@@ -782,5 +782,63 @@
     "contraparte": "jklvhuigyouivyol",
     "documento": "khkgylbhklç",
     "origem_registro": "MANUAL"
+  },
+  {
+    "id_movimentacao": "MOV-1794675638067",
+    "cofre_id": "COFRE-01",
+    "timestamp": "2026-11-14T18:05:00.000Z",
+    "tipo": "ENTRADA_COMPRA",
+    "id_medicamento": "MED-003",
+    "codigo_lote": "LOT-STE-2201",
+    "quantidade": 30,
+    "validade": "2026-09-09",
+    "origem_registro": "MANUAL"
+  },
+  {
+    "id_movimentacao": "MOV-1794675672237",
+    "cofre_id": "COFRE-01",
+    "timestamp": "2026-11-14T18:05:00.000Z",
+    "tipo": "ENTRADA_COMPRA",
+    "id_medicamento": "MED-004",
+    "codigo_lote": "LOT-KEY-2208",
+    "quantidade": 20,
+    "validade": "2026-12-21",
+    "origem_registro": "MANUAL"
+  },
+  {
+    "id_movimentacao": "MOV-1794677169190",
+    "cofre_id": "COFRE-01",
+    "timestamp": "2026-11-14T18:05:00.000Z",
+    "tipo": "ENTRADA_COMPRA",
+    "id_medicamento": "MED-001",
+    "codigo_lote": "LOT-HUM-2300",
+    "id_recebimento": "MOV-1794677169190",
+    "quantidade": 20,
+    "validade": "2026-11-14",
+    "origem_registro": "MANUAL"
+  },
+  {
+    "id_movimentacao": "MOV-1794677218647",
+    "cofre_id": "COFRE-01",
+    "timestamp": "2026-11-14T18:05:00.000Z",
+    "tipo": "ENTRADA_COMPRA",
+    "id_medicamento": "MED-005",
+    "codigo_lote": "LOT-ENB-2303",
+    "id_recebimento": "MOV-1794677218647",
+    "quantidade": 31,
+    "validade": "2026-09-09",
+    "origem_registro": "MANUAL"
+  },
+  {
+    "id_movimentacao": "MOV-1794677284789",
+    "cofre_id": "COFRE-01",
+    "timestamp": "2026-11-14T18:05:00.000Z",
+    "tipo": "ENTRADA_COMPRA",
+    "id_medicamento": "MED-004",
+    "codigo_lote": "LOT-KEY-2208",
+    "id_recebimento": "MOV-1794677284789",
+    "quantidade": 11,
+    "validade": "2026-11-14",
+    "origem_registro": "MANUAL"
   }
 ]

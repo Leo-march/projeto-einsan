@@ -4,7 +4,7 @@ import { Plus } from 'lucide-react';
 import { useStore } from '@/context/Store';
 import { Badge, Card, DataTable, Modal, Sel, type Col } from '@/components/ui';
 import { buscarMovimentacoes, registrarMovimentacao, ApiError } from '@/services/api';
-import { dataHoraBR, qtdComSinal, tipoMovLabel, tipoMovTone } from '@/utils/apiHelpers';
+import { dataHoraBR, loteLabel, qtdComSinal, tipoMovLabel, tipoMovTone } from '@/utils/apiHelpers';
 import type { MovimentacaoApi, NovaMovimentacao, OrigemApi, TipoMovApi } from '@/types/api';
 
 const TIPOS = Object.keys(tipoMovLabel) as TipoMovApi[];
@@ -15,6 +15,7 @@ export default function Movimentacoes() {
   const { estoque, recarregarApi, toast } = useStore();
   const itens = estoque?.itens ?? [];
   const nomeDe = (id: string) => itens.find((i) => i.id_medicamento === id)?.nome ?? id;
+  const lotesDoMed = (id: string) => itens.find((i) => i.id_medicamento === id)?.lotes ?? [];
   const [tipo, setTipo] = useState('Todos'), [med, setMed] = useState('Todos'), [de, setDe] = useState(''), [ate, setAte] = useState('');
   const [rows, setRows] = useState<MovimentacaoApi[]>([]), [carr, setCarr] = useState(true), [erro, setErro] = useState('');
   const [form, setForm] = useState<NovaMovimentacao | null>(null), [enviando, setEnviando] = useState(false), [erroForm, setErroForm] = useState('');
@@ -72,12 +73,13 @@ export default function Movimentacoes() {
       {form && (
         <Modal title="Registrar movimentação" onClose={() => !enviando && setForm(null)} wide>
           <div className="form">
-            <label>Tipo<select value={form.tipo} onChange={(e) => set('tipo', e.target.value as TipoMovApi)}>{TIPOS.map((t) => <option key={t} value={t}>{tipoMovLabel[t]}</option>)}</select></label>
-            <label>Medicamento<select value={form.id_medicamento} onChange={(e) => set('id_medicamento', e.target.value)}>{itens.map((i) => <option key={i.id_medicamento} value={i.id_medicamento}>{i.nome}</option>)}</select></label>
-            <label>Lote<input value={form.codigo_lote} onChange={(e) => set('codigo_lote', e.target.value)} list="lotes-do-med" />
-              <datalist id="lotes-do-med">{itens.find((i) => i.id_medicamento === form.id_medicamento)?.lotes.map((l) => <option key={l.codigo_lote} value={l.codigo_lote} />)}</datalist></label>
+            <label>Tipo<select value={form.tipo} onChange={(e) => setForm((f) => f ? { ...f, tipo: e.target.value as TipoMovApi, id_recebimento: undefined } : f)}>{TIPOS.map((t) => <option key={t} value={t}>{tipoMovLabel[t]}</option>)}</select></label>
+            <label>Medicamento<select value={form.id_medicamento} onChange={(e) => setForm((f) => f ? { ...f, id_medicamento: e.target.value, codigo_lote: '', id_recebimento: undefined } : f)}>{itens.map((i) => <option key={i.id_medicamento} value={i.id_medicamento}>{i.nome}</option>)}</select></label>
+            <label>Lote<input value={form.codigo_lote} onChange={(e) => setForm((f) => f ? { ...f, codigo_lote: e.target.value, id_recebimento: undefined } : f)} list="lotes-do-med" />
+              <datalist id="lotes-do-med">{lotesDoMed(form.id_medicamento).map((l) => <option key={l.id_recebimento} value={l.codigo_lote} label={`Recebido em ${dataHoraBR(l.primeira_entrada)}`} />)}</datalist></label>
+            {!form.tipo.startsWith('ENTRADA') && <label>Recebimento de origem<select value={form.id_recebimento ?? ''} onChange={(e) => set('id_recebimento', e.target.value || undefined)}><option value="">Selecione o recebimento</option>{lotesDoMed(form.id_medicamento).filter((l) => l.codigo_lote === form.codigo_lote).map((l) => <option key={l.id_recebimento} value={l.id_recebimento}>{l.codigo_lote} · {dataHoraBR(l.primeira_entrada)} · {l.quantidade} un. · {loteLabel[l.status]}</option>)}</select></label>}
             <label>Quantidade{form.tipo === 'AJUSTE_INVENTARIO' ? ' (negativa reduz)' : ''}<input type="number" step={1} value={form.quantidade} onChange={(e) => set('quantidade', Math.trunc(+e.target.value))} /></label>
-            <label>Validade (obrigatória na 1ª entrada do lote)<input type="date" value={form.validade ?? ''} onChange={(e) => set('validade', e.target.value)} /></label>
+            {form.tipo.startsWith('ENTRADA') && <label>Validade (obrigatória em cada recebimento)<input type="date" value={form.validade ?? ''} onChange={(e) => set('validade', e.target.value)} /></label>}
             <label>Origem do registro<select value={form.origem_registro} onChange={(e) => set('origem_registro', e.target.value as OrigemApi)}>{ORIGENS.map((o) => <option key={o}>{o}</option>)}</select></label>
             <label>Documento<input value={form.documento ?? ''} onChange={(e) => set('documento', e.target.value)} /></label>
             <label>Contraparte<input value={form.contraparte ?? ''} onChange={(e) => set('contraparte', e.target.value)} /></label>
