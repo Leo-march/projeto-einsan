@@ -34,6 +34,34 @@ const deltaMov = (m: MovimentacaoEstoque) => SINAL[m.tipo] * m.quantidade;
 const soma = (xs: number[]) => xs.reduce((a, b) => a + b, 0);
 const arred2 = (n: number) => Math.round(n * 100) / 100;
 const fimDoDia = (validade: string) => Date.parse(`${validade}T23:59:59-03:00`);
+const validadeValida = (validade: unknown): validade is string =>
+  typeof validade === "string" &&
+  /^\d{4}-\d{2}-\d{2}$/.test(validade) &&
+  !Number.isNaN(Date.parse(`${validade}T00:00:00Z`)) &&
+  new Date(`${validade}T00:00:00Z`).toISOString().slice(0, 10) === validade;
+type LoteReconstruido = {
+  id_medicamento: string;
+  codigo_lote: string;
+  id_recebimento: string;
+  validade: string;
+  saldo: number;
+  entrada_ms: number;
+};
+
+// ============================================================
+// Invalidação térmica POR LOTE.
+// A excursão invalida apenas os lotes que estavam no cofre enquanto ela
+// acontecia. Lote que entrou depois do retorno à faixa não foi exposto.
+// ============================================================
+export function loteInvalidadoTermicamente(
+  avaliacao: Pick<AvaliacaoTermica, "status" | "excursao_em_andamento" | "fim_excursao"> | undefined,
+  lote: { primeira_entrada?: string }
+): boolean {
+  if (!avaliacao || avaliacao.status !== "LOTES_INVALIDADOS") return false;
+  if (avaliacao.excursao_em_andamento || !avaliacao.fim_excursao) return true;
+  if (!lote.primeira_entrada) return true; // sem data de entrada: critério conservador
+  return Date.parse(lote.primeira_entrada) <= Date.parse(avaliacao.fim_excursao);
+}
 
 // ============================================================
 // Reconstrói o estoque por lote reproduzindo o livro de movimentações.
@@ -73,31 +101,66 @@ export function reconstruirEstoque(
   }
   validas.sort((a, b) => a.ms - b.ms);
 
-  const lotes = new Map<string, { id_medicamento: string; codigo_lote: string; validade: string; saldo: number }>();
+  const lotes = new Map<string, LoteReconstruido>();
+  const lotesPorCodigo = new Map<string, LoteReconstruido[]>();
   const processadas: MovimentacaoEstoque[] = [];
 
-  for (const { m } of validas) {
+  for (const { m, ms } of validas) {
     const k = chaveLote(m);
-    let lote = lotes.get(k);
     if (ehEntrada(m.tipo)) {
-      if (!lote) {
-        if (!m.validade) {
+      if (!validadeValida(m.validade)) {
+        ignoradas++;
+        avisos.push({ codigo: "ENTRADA_SEM_VALIDADE", severidade: "ATENCAO", mensagem: `Entrada do lote ${m.codigo_lote} sem validade válida foi ignorada.`, id_referencia: m.id_movimentacao });
+        continue;
+      }
+      const lote: LoteReconstruido = {
+        id_medicamento: m.id_medicamento,
+        codigo_lote: m.codigo_lote,
+        id_recebimento: m.id_movimentacao,
+        validade: m.validade,
+        saldo: m.quantidade,
+        entrada_ms: ms,
+      };
+      lotes.set(`${k}|${lote.id_recebimento}`, lote);
+      const doCodigo = lotesPorCodigo.get(k) ?? [];
+      doCodigo.push(lote);
+      lotesPorCodigo.set(k, doCodigo);
+    } else {
+      const doCodigo = lotesPorCodigo.get(k) ?? [];
+      const delta = deltaMov(m);
+      const referenciado = m.id_recebimento
+        ? doCodigo.find((l) => l.id_recebimento === m.id_recebimento)
+        : undefined;
+      const candidatos = referenciado
+        ? [referenciado]
+        : (delta > 0 ? doCodigo : doCodigo.filter((l) => l.saldo > 0)).sort((a, b) => a.entrada_ms - b.entrada_ms);
+
+      if (!candidatos.length || (m.id_recebimento && !referenciado)) {
+        ignoradas++;
+        avisos.push({ codigo: "LOTE_SEM_ENTRADA", severidade: "ATENCAO", mensagem: `Saída do lote ${m.codigo_lote} sem recebimento correspondente.`, id_referencia: m.id_movimentacao });
+        continue;
+      }
+
+      if (delta > 0) {
+        const lote = referenciado ?? (candidatos.length === 1 ? candidatos[0] : undefined);
+        if (!lote) {
           ignoradas++;
-          avisos.push({ codigo: "ENTRADA_SEM_VALIDADE", severidade: "ATENCAO", mensagem: `Entrada do lote ${m.codigo_lote} sem validade foi ignorada.`, id_referencia: m.id_movimentacao });
+          avisos.push({ codigo: "LOTE_SEM_ENTRADA", severidade: "ATENCAO", mensagem: `Ajuste do lote ${m.codigo_lote} precisa identificar o recebimento.`, id_referencia: m.id_movimentacao });
           continue;
         }
-        lote = { id_medicamento: m.id_medicamento, codigo_lote: m.codigo_lote, validade: m.validade, saldo: 0 };
-        lotes.set(k, lote);
+        lote.saldo += delta;
+      } else if (delta < 0) {
+        let restante = -delta;
+        for (const lote of candidatos) {
+          const retirada = Math.min(lote.saldo, restante);
+          lote.saldo -= retirada;
+          restante -= retirada;
+          if (restante <= 0) break;
+        }
+        if (restante > 0) {
+          avisos.push({ codigo: "SALDO_NEGATIVO", severidade: "ATENCAO", mensagem: `Saldo do lote ${m.codigo_lote} ficaria negativo; ajustado para 0. Há saída sem registro de entrada.`, id_referencia: m.id_movimentacao });
+        }
       }
-    } else if (!lote) {
-      ignoradas++;
-      avisos.push({ codigo: "LOTE_SEM_ENTRADA", severidade: "ATENCAO", mensagem: `Saída do lote ${m.codigo_lote} sem entrada registrada.`, id_referencia: m.id_movimentacao });
-      continue;
-    }
-    lote.saldo += deltaMov(m);
-    if (lote.saldo < 0) {
-      avisos.push({ codigo: "SALDO_NEGATIVO", severidade: "ATENCAO", mensagem: `Saldo do lote ${m.codigo_lote} ficaria negativo; ajustado para 0. Há saída sem registro de entrada.`, id_referencia: m.id_movimentacao });
-      lote.saldo = 0;
     }
     processadas.push(m);
   }
@@ -124,7 +187,13 @@ export function reconstruirEstoque(
       consumo_medio_diario: arred2(saidas / janela),
       lotes: [...lotes.values()]
         .filter((l) => l.id_medicamento === p.id_medicamento && l.saldo > 0)
-        .map((l) => ({ codigo_lote: l.codigo_lote, quantidade: l.saldo, validade: l.validade })),
+        .map((l) => ({
+          codigo_lote: l.codigo_lote,
+          id_recebimento: l.id_recebimento,
+          quantidade: l.saldo,
+          validade: l.validade,
+          primeira_entrada: new Date(l.entrada_ms).toISOString(),
+        })),
     };
   });
 
@@ -194,12 +263,22 @@ export function montarVisaoEstoque(
   refMs: number
 ): VisaoEstoque {
   const itens = estoque.itens.map((item) => {
-    const invalidado = avaliacoes.find((a) => a.id_medicamento === item.id_medicamento)?.status === "LOTES_INVALIDADOS";
+    const avaliacao = avaliacoes.find((a) => a.id_medicamento === item.id_medicamento);
     const lotes = item.lotes
       .map((l) => {
-        const dias = Math.floor((fimDoDia(l.validade) - refMs) / MS_DIA);
-        const status: StatusLote = invalidado ? "INVALIDADO_TERMICO" : dias <= 0 ? "VENCIDO" : dias <= 30 ? "VENCE_EM_30_DIAS" : "OK";
-        return { codigo_lote: l.codigo_lote, quantidade: l.quantidade, validade: l.validade, dias_para_vencer: dias, status };
+        const invalidado = loteInvalidadoTermicamente(avaliacao, l);
+        const validadeFinal = fimDoDia(l.validade);
+        const dias = Math.floor((validadeFinal - refMs) / MS_DIA);
+        const status: StatusLote = invalidado ? "INVALIDADO_TERMICO" : validadeFinal < refMs ? "VENCIDO" : dias <= 30 ? "VENCE_EM_30_DIAS" : "OK";
+        return {
+          codigo_lote: l.codigo_lote,
+          id_recebimento: l.id_recebimento,
+          primeira_entrada: l.primeira_entrada,
+          quantidade: l.quantidade,
+          validade: l.validade,
+          dias_para_vencer: dias,
+          status,
+        };
       })
       .sort((a, b) => a.dias_para_vencer - b.dias_para_vencer);
     const saldo = soma(lotes.map((l) => l.quantidade));
@@ -248,35 +327,44 @@ export function validarNovaMovimentacao(
     erros.push("quantidade deve ser um inteiro positivo (ajuste de inventário aceita negativo).");
   }
 
-  const loteAtual = estoqueTotal.itens.find((i) => i.id_medicamento === id_medicamento)?.lotes.find((l) => l.codigo_lote === codigo_lote);
+  const lotesDoCodigo = estoqueTotal.itens.find((i) => i.id_medicamento === id_medicamento)?.lotes.filter((l) => l.codigo_lote === codigo_lote) ?? [];
+  const id_recebimento = typeof b.id_recebimento === "string" ? b.id_recebimento.trim() : "";
+  const loteAtual = lotesDoCodigo.find((l) => l.id_recebimento === id_recebimento);
   const validade = typeof b.validade === "string" ? b.validade : undefined;
+  const timestamp = typeof b.timestamp === "string" && !Number.isNaN(Date.parse(b.timestamp)) ? b.timestamp : agora.toISOString();
 
   if (TIPOS.includes(tipo) && ehEntrada(tipo)) {
-    if (!loteAtual && !(validade && /^\d{4}-\d{2}-\d{2}$/.test(validade) && !Number.isNaN(Date.parse(validade)))) {
-      erros.push("validade (YYYY-MM-DD) é obrigatória na primeira entrada de um lote.");
+    if (!validadeValida(validade)) {
+      erros.push("validade válida (YYYY-MM-DD) é obrigatória em cada entrada.");
     }
   } else if (TIPOS.includes(tipo) && Number.isInteger(quantidade)) {
+    if (!id_recebimento) erros.push("id_recebimento é obrigatório para identificar o saldo de origem.");
+    if (id_recebimento && !loteAtual) erros.push("recebimento não encontrado para o lote informado.");
+    if (loteAtual && Date.parse(timestamp) < Date.parse(loteAtual.primeira_entrada)) {
+      erros.push("timestamp da movimentação não pode ser anterior ao recebimento de origem.");
+    }
     const retirada = tipo === "AJUSTE_INVENTARIO" ? (quantidade < 0 ? -quantidade : 0) : quantidade;
     if (retirada > 0 && (loteAtual?.quantidade ?? 0) < retirada) {
       erros.push(`saldo insuficiente no lote ${codigo_lote} (disponível: ${loteAtual?.quantidade ?? 0}).`);
     }
   }
 
-  const timestamp = typeof b.timestamp === "string" && !Number.isNaN(Date.parse(b.timestamp)) ? b.timestamp : agora.toISOString();
   const origem = ["SCANNER", "MANUAL", "INTEGRACAO_NF"].includes(String(b.origem_registro)) ? (b.origem_registro as MovimentacaoEstoque["origem_registro"]) : "MANUAL";
 
   if (erros.length) return { ok: false, erros };
 
   const str = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : undefined);
+  const id_movimentacao = `MOV-${agora.getTime()}`;
   return {
     ok: true,
     movimentacao: {
-      id_movimentacao: `MOV-${agora.getTime()}`,
+      id_movimentacao,
       cofre_id: parametros.cofre_id,
       timestamp,
       tipo,
       id_medicamento,
       codigo_lote,
+      id_recebimento: ehEntrada(tipo) ? id_movimentacao : id_recebimento,
       quantidade,
       validade,
       contraparte: str(b.contraparte),

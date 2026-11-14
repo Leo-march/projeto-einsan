@@ -23,7 +23,7 @@ export type QualidadeApi = { movimentacoes_processadas: number; movimentacoes_ig
 
 // ---- GET /api/estoque ----
 export type StatusLoteApi = 'OK' | 'VENCE_EM_30_DIAS' | 'VENCIDO' | 'INVALIDADO_TERMICO';
-export type LoteApi = { codigo_lote: string; quantidade: number; validade: string; dias_para_vencer: number; status: StatusLoteApi };
+export type LoteApi = { codigo_lote: string; id_recebimento: string; primeira_entrada: string; quantidade: number; validade: string; dias_para_vencer: number; status: StatusLoteApi };
 export type ItemEstoqueApi = { id_medicamento: string; nome: string; saldo_registrado: number; valor_imobilizado_brl: number; consumo_medio_diario: number; lotes: LoteApi[] };
 export type EstoqueApi = {
   meta: { cofre_id: string; data_referencia: string };
@@ -37,10 +37,10 @@ export type TipoMovApi = 'ENTRADA_COMPRA' | 'ENTRADA_TRANSFERENCIA' | 'SAIDA_DIS
 export type OrigemApi = 'SCANNER' | 'MANUAL' | 'INTEGRACAO_NF';
 export type MovimentacaoApi = {
   id_movimentacao: string; cofre_id: string; timestamp: string; tipo: TipoMovApi; id_medicamento: string; codigo_lote: string; quantidade: number;
-  validade?: string; origem_registro: OrigemApi; contraparte?: string; documento?: string; usuario_id?: string; ref_evento_hardware?: string; observacao?: string; saldo_lote_apos: number;
+  id_recebimento?: string; validade?: string; origem_registro: OrigemApi; contraparte?: string; documento?: string; usuario_id?: string; ref_evento_hardware?: string; observacao?: string; saldo_lote_apos: number;
 };
 export type NovaMovimentacao = {
-  tipo: TipoMovApi; id_medicamento: string; codigo_lote: string; quantidade: number; validade?: string; origem_registro?: OrigemApi;
+  tipo: TipoMovApi; id_medicamento: string; codigo_lote: string; quantidade: number; id_recebimento?: string; validade?: string; origem_registro?: OrigemApi;
   contraparte?: string; documento?: string; usuario_id?: string; observacao?: string;
 };
 export type FiltrosMov = { id_medicamento?: string; codigo_lote?: string; tipo?: string; limite?: number };

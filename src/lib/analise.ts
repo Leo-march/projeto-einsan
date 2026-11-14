@@ -14,7 +14,7 @@ import type {
   MovimentacaoEstoque,
   ParametrosCofre,
 } from "@/types/dominio";
-import { conciliarScanner, reconstruirEstoque } from "@/lib/estoque";
+import { conciliarScanner, loteInvalidadoTermicamente, reconstruirEstoque } from "@/lib/estoque";
 import { calcularConsumoEQualidade } from "@/lib/consumo";
 import { escolherFornecedor } from "@/lib/fornecedores";
 import { calcularImpacto } from "@/lib/impacto";
@@ -54,6 +54,7 @@ export function analisarRiscoTermico(
         typeof l.temperatura_celsius === "number"
     )
     .map((l) => ({ ms: Date.parse(l.timestamp), temp: l.temperatura_celsius as number }))
+    .filter((l) => !Number.isNaN(l.ms) && l.ms <= refMs) // não usar leituras posteriores à data de referência
     .sort((a, b) => a.ms - b.ms);
 
   const avaliacoes: AvaliacaoTermica[] = [];
@@ -110,7 +111,10 @@ export function analisarRiscoTermico(
     });
 
     if (status === "LOTES_INVALIDADOS") {
-      const lotes = estoque.itens.find((i) => i.id_medicamento === bula.id_medicamento)?.lotes ?? [];
+      const avaliacaoAtual = avaliacoes[avaliacoes.length - 1];
+      const lotes = (estoque.itens.find((i) => i.id_medicamento === bula.id_medicamento)?.lotes ?? []).filter((l) =>
+        loteInvalidadoTermicamente(avaliacaoAtual, l)
+      );
       alertas.push({
         tipo: "RISCO_TERMICO",
         severidade: "CRITICA",
@@ -209,8 +213,7 @@ export function gerarRecomendacoes(
   for (const item of estoque.itens) {
     const bula = bulas.find((b) => b.id_medicamento === item.id_medicamento);
     const nome = bula?.nome ?? item.id_medicamento;
-    const invalidadoTermico =
-      avaliacoes.find((a) => a.id_medicamento === item.id_medicamento)?.status === "LOTES_INVALIDADOS";
+    const avaliacaoTermica = avaliacoes.find((a) => a.id_medicamento === item.id_medicamento);
     const { consumo: consumoHistorico, qualidade: qualidadeDados } = calcularConsumoEQualidade(
       item.id_medicamento,
       estoque.cofre_id,
@@ -227,7 +230,7 @@ export function gerarRecomendacoes(
     const validos: { codigo_lote: string; quantidade: number; dias: number }[] = [];
 
     for (const lote of item.lotes) {
-      if (invalidadoTermico) {
+      if (loteInvalidadoTermicamente(avaliacaoTermica, lote)) {
         invalidadas += lote.quantidade;
         continue;
       }
@@ -310,7 +313,7 @@ export function gerarRecomendacoes(
     };
 
     const justificativas: string[] = [];
-    if (invalidadoTermico) justificativas.push(`${invalidadas} un. invalidadas por excursão térmica (regra da bula).`);
+    if (invalidadas > 0) justificativas.push(`${invalidadas} un. invalidadas por excursão térmica (regra da bula).`);
     if (vencidas > 0) justificativas.push(`${vencidas} un. com validade expirada.`);
     if (emRisco > 0)
       justificativas.push(`${emRisco} un. (${lotesEmRisco.join(", ")}) vencem antes de serem consumidas no ritmo atual.`);

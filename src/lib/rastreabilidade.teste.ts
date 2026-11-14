@@ -10,7 +10,7 @@ const estoque: EstoqueCofre = {
     consumo_medio_diario: 1,
     prazo_reposicao_dias: 2,
     estoque_seguranca_dias: 1,
-    lotes: [{ codigo_lote: "LOT-1", quantidade: 5, validade: "2027-01-01" }],
+    lotes: [{ codigo_lote: "LOT-1", id_recebimento: "REC-1", primeira_entrada: "2026-10-01T10:00:00Z", quantidade: 5, validade: "2027-01-01" }],
   }],
 };
 
