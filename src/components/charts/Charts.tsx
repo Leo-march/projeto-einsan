@@ -3,7 +3,7 @@ import { ResponsiveContainer, LineChart, Line, AreaChart, Area, BarChart, Bar, P
 import type { Prev } from '@/types';
 
 /** Paleta dos gráficos: azul de ação, verde/âmbar/vermelho para estados e um azul-gelo de apoio. */
-export const C = { navy: '#0b2545', blue: '#0b57d0', sky: '#7cacf8', green: '#1e8e3e', amber: '#f9ab00', red: '#d93025', grid: '#e3e7ec' };
+export const C = { navy: '#0b2545', blue: '#0a6190', sky: '#6db6dc', green: '#1e8e3e', amber: '#f9ab00', red: '#d93025', grid: '#d8e6ee' };
 
 export const ax = { tick: { fontSize: 12, fill: '#5f6368' }, stroke: '#c4c7c5', tickLine: false };
 

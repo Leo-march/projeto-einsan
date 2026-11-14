@@ -3,7 +3,7 @@
 .fundo {
     position: fixed;
     inset: 0;
-    background: rgba(32, 33, 36, .4);
+    background: rgba(11, 37, 69, .4);
     z-index: 44;
     animation: aparecer .2s ease-out
 }
@@ -14,11 +14,11 @@
     right: 0;
     bottom: 0;
     width: min(440px, 100vw);
-    background: var(--card);
+    background: var(--bg);
     display: flex;
     flex-direction: column;
     z-index: 45;
-    box-shadow: -8px 0 32px rgba(60, 64, 67, .25);
+    box-shadow: -12px 0 40px rgba(11, 37, 69, .22);
     animation: entrar .25s cubic-bezier(.2, .8, .2, 1)
 }
 
@@ -28,32 +28,50 @@
     }
 
     .painel {
-        top: 12px;
-        right: 12px;
-        bottom: 12px;
-        border-radius: 28px;
+        top: 14px;
+        right: 14px;
+        bottom: 14px;
+        border-radius: 20px;
         overflow: hidden;
-        border: 1px solid var(--line)
+        border: 1px solid var(--line);
+        box-shadow: 0 24px 60px rgba(11, 37, 69, .28), 0 2px 8px rgba(11, 37, 69, .1)
     }
 }
 
+/* ---------- Cabeçalho: claro, com um fio de gelo, sem bloco colorido ---------- */
+
 .topo {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 14px 14px 14px 18px;
-    background: var(--blue-c);
-    color: var(--on-blue-c)
+    padding: 14px 12px 14px 16px;
+    background: linear-gradient(180deg, #fff 0%, var(--blue-s) 100%);
+    border-bottom: 1px solid var(--line);
+    color: var(--navy)
+}
+
+.topo::after {
+    content: "";
+    position: absolute;
+    left: 16px;
+    right: 16px;
+    bottom: -1px;
+    height: 2px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--frost), rgba(170, 216, 239, 0))
 }
 
 .avatar {
-    width: 68px;
-    height: 68px;
+    width: 52px;
+    height: 52px;
     display: grid;
     place-items: center;
     flex: none;
-    border-radius: 50%;
+    border-radius: 16px;
     background: #fff;
+    border: 1px solid var(--frost);
+    box-shadow: 0 2px 8px rgba(11, 37, 69, .1);
     overflow: hidden
 }
 
@@ -61,11 +79,12 @@
     flex: 1;
     min-width: 0;
     display: flex;
-    flex-direction: column
+    flex-direction: column;
+    gap: 1px
 }
 
 .identidade b {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 700;
     letter-spacing: -.02em
 }
@@ -75,66 +94,77 @@
     align-items: center;
     gap: 7px;
     font-size: 12.5px;
-    opacity: .8;
+    color: var(--mu);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis
 }
 
 .online {
-    width: 8px;
-    height: 8px;
+    width: 7px;
+    height: 7px;
     border-radius: 50%;
     background: #1e8e3e;
+    box-shadow: 0 0 0 3px rgba(30, 142, 62, .18);
     flex: none;
     animation: pulsar 2s ease-in-out infinite
 }
 
 .acao {
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
     display: grid;
     place-items: center;
     border: 0;
-    border-radius: 50%;
+    border-radius: 10px;
     background: none;
-    color: inherit;
+    color: var(--mu);
     cursor: pointer;
-    transition: background .15s
+    transition: background .15s, color .15s
 }
 
 .acao:hover {
-    background: rgba(255, 255, 255, .6)
+    background: var(--ice);
+    color: var(--navy)
 }
 
+/* ---------- Contexto ---------- */
+
 .contexto {
-    padding: 14px 18px 12px;
+    padding: 14px 16px 14px;
+    background: var(--card);
     border-bottom: 1px solid var(--line)
 }
 
 .contexto small {
     display: block;
-    font-size: 12px;
-    color: var(--mu);
-    font-weight: 500
+    font-size: 11.5px;
+    color: var(--dim);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .06em
 }
 
 .contexto strong {
-    font-size: 16px;
-    font-weight: 600
+    display: block;
+    margin-top: 1px;
+    font-size: 15.5px;
+    font-weight: 600;
+    letter-spacing: -.01em
 }
 
 .cartoes {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 8px;
-    margin-top: 10px
+    margin-top: 12px
 }
 
 .cartoes div {
-    background: var(--surface2);
-    border-radius: 14px;
-    padding: 8px 12px 9px;
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--ice-d);
+    border-radius: 8px 12px 12px 8px;
+    padding: 7px 11px 8px;
     min-width: 0
 }
 
@@ -149,39 +179,47 @@
     display: block;
     font-weight: 600;
     font-size: 14px;
+    font-variant-numeric: tabular-nums;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap
 }
 
+/* ---------- Conversa ---------- */
+
 .mensagens {
     flex: 1;
     min-height: 0;
     overflow-y: auto;
-    padding: 16px 18px;
+    padding: 18px 16px 12px;
     display: flex;
     flex-direction: column;
-    gap: 14px
+    gap: 16px
 }
 
 .dia {
     display: flex;
-    justify-content: center
+    align-items: center;
+    gap: 12px;
+    color: var(--dim);
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: .04em
 }
 
-.dia span {
-    font-size: 12px;
-    color: var(--mu);
-    background: var(--surface2);
-    padding: 2px 12px;
-    border-radius: 10px
+.dia::before,
+.dia::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--line)
 }
 
 .linha {
     display: flex;
-    gap: 8px;
+    gap: 9px;
     align-items: flex-end;
-    max-width: 92%;
+    max-width: 90%;
     animation: subir .22s ease-out
 }
 
@@ -195,20 +233,21 @@
 }
 
 .miniAvatar {
-    width: 32px;
-    height: 32px;
+    width: 30px;
+    height: 30px;
     display: grid;
     place-items: center;
     flex: none;
-    border-radius: 50%;
-    background: var(--blue-s);
+    border-radius: 10px;
+    background: #fff;
+    border: 1px solid var(--line);
     overflow: hidden
 }
 
 .conteudo {
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 4px;
     min-width: 0
 }
 
@@ -218,27 +257,31 @@
 
 .balao {
     padding: 10px 14px;
-    font-size: 14px;
-    line-height: 1.5;
+    font-size: 14.5px;
+    line-height: 1.55;
     white-space: pre-wrap;
     overflow-wrap: anywhere
 }
 
+/* Balões com raios diferentes entre si (16 e 5): menos "pílula", mais natural */
 .san {
-    background: var(--surface2);
-    border-radius: 18px 18px 18px 4px
+    background: var(--card);
+    border: 1px solid var(--line);
+    box-shadow: 0 1px 2px rgba(11, 37, 69, .05);
+    border-radius: 16px 16px 16px 5px
 }
 
 .usuario {
-    background: var(--blue);
+    background: linear-gradient(160deg, #0d6fa5, var(--blue));
     color: #fff;
-    border-radius: 18px 18px 4px 18px
+    box-shadow: 0 2px 8px rgba(10, 97, 144, .25);
+    border-radius: 16px 16px 5px 16px
 }
 
 .hora {
     font-size: 11px;
     color: var(--dim);
-    padding: 0 4px
+    padding: 0 3px
 }
 
 .digitando {
@@ -249,10 +292,10 @@
 }
 
 .digitando i {
-    width: 7px;
-    height: 7px;
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
-    background: var(--dim);
+    background: var(--ice-d);
     animation: pulsar 1s ease-in-out infinite
 }
 
@@ -264,32 +307,43 @@
     animation-delay: .3s
 }
 
+/* ---------- Rodapé ---------- */
+
 .rodape {
-    padding: 10px 16px 14px;
+    padding: 10px 14px 12px;
+    background: var(--card);
     border-top: 1px solid var(--line)
 }
 
 .sugestoes {
     display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 10px
+    gap: 6px;
+    margin-bottom: 10px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scrollbar-width: none
+}
+
+.sugestoes::-webkit-scrollbar {
+    display: none
 }
 
 .sugestoes button {
-    border: 1px solid var(--line2);
-    background: var(--card);
-    color: var(--blue);
-    padding: 6px 14px;
-    border-radius: 16px;
+    flex: none;
+    border: 1px solid var(--frost);
+    background: var(--blue-s);
+    color: var(--on-blue-c);
+    padding: 6px 12px;
+    border-radius: 10px;
     font-size: 13px;
     font-weight: 500;
     cursor: pointer;
-    transition: background .15s
+    transition: background .15s, border-color .15s
 }
 
 .sugestoes button:hover:not(:disabled) {
-    background: var(--blue-s)
+    background: var(--ice);
+    border-color: var(--ice-d)
 }
 
 .sugestoes button:disabled {
@@ -301,15 +355,16 @@
     display: flex;
     align-items: flex-end;
     gap: 8px;
-    background: var(--surface3);
-    border-radius: 26px;
-    padding: 4px 4px 4px 18px;
-    transition: background .15s, box-shadow .15s
+    background: var(--card);
+    border: 1.5px solid var(--line2);
+    border-radius: 16px;
+    padding: 4px 4px 4px 14px;
+    transition: border-color .15s, box-shadow .15s
 }
 
 .entrada:focus-within {
-    background: var(--card);
-    box-shadow: 0 0 0 2px var(--blue)
+    border-color: var(--blue);
+    box-shadow: 0 0 0 4px rgba(109, 182, 220, .25)
 }
 
 .entrada textarea {
@@ -318,9 +373,9 @@
     border: 0;
     background: none;
     resize: none;
-    padding: 10px 0;
+    padding: 9px 0;
     max-height: 120px;
-    line-height: 1.4;
+    line-height: 1.45;
     box-shadow: none !important
 }
 
@@ -329,25 +384,27 @@
 }
 
 .enviar {
-    width: 40px;
-    height: 40px;
+    width: 38px;
+    height: 38px;
     display: grid;
     place-items: center;
     flex: none;
     border: 0;
-    border-radius: 50%;
+    border-radius: 12px;
     background: var(--blue);
     color: #fff;
     cursor: pointer;
-    transition: background .15s
+    transition: background .15s, transform .15s
 }
 
 .enviar:hover:not(:disabled) {
-    background: var(--blue-h)
+    background: var(--blue-h);
+    transform: translateY(-1px)
 }
 
 .enviar:disabled {
-    background: var(--line2);
+    background: var(--surface3);
+    color: var(--dim);
     cursor: default
 }
 
