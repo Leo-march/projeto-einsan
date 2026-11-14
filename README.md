@@ -15,7 +15,7 @@ A aplicação fica disponível em `http://localhost:3000`. Para compilar e execu
 npm run build
 npm run start
 ```
-
+a
 ## Documentação
 
 - [Guia completo atualizado — PDF](docs/guia-api-cofre-inteligente-atualizado.pdf)
