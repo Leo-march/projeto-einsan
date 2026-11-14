@@ -1,0 +1,23 @@
+[
+  {
+    "id_medicamento": "MED-001",
+    "nome": "Humira (adalimumabe) 40mg",
+    "temp_min_celsius": 2,
+    "temp_max_celsius": 8,
+    "alerta_exposicao_minutos": 30
+  },
+  {
+    "id_medicamento": "MED-002",
+    "nome": "Herceptin (trastuzumabe) 440mg",
+    "temp_min_celsius": 2,
+    "temp_max_celsius": 8,
+    "alerta_exposicao_minutos": 45
+  },
+  {
+    "id_medicamento": "MED-003",
+    "nome": "Stelara (ustequinumabe) 45mg",
+    "temp_min_celsius": 2,
+    "temp_max_celsius": 8,
+    "alerta_exposicao_minutos": 90
+  }
+]
