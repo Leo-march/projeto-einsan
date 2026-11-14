@@ -14,8 +14,9 @@ import type { NovaMovimentacao, OrigemApi } from '@/types/api';
 export default function Compras() {
   const { analise, estoque, movs, custo, recStatus, setRec, carregandoApi, recarregarApi, toast } = useStore();
   const [det, setDet] = useState<string | null>(null), [cmp, setCmp] = useState<string | null>(null);
+  const [rej, setRej] = useState<string | null>(null);
   const [entrada, setEntrada] = useState<NovaMovimentacao | null>(null), [enviando, setEnviando] = useState(false), [erroEntrada, setErroEntrada] = useState('');
-  const itens = (analise?.recomendacoes_compra ?? []).filter((r) => r.recomendar_compra !== false);
+  const itens = (analise?.recomendacoes_compra ?? []).filter((r) => r.recomendar_compra !== false && recStatus[r.id_medicamento] !== 'rejeitada');
   const aberto = itens.find((i) => i.id_medicamento === (det ?? cmp));
 
   const forns = cmp ? fornecedores(movs, custo, cmp) : [];
@@ -140,12 +141,22 @@ export default function Compras() {
                 <button className="btn" onClick={() => setDet(r.id_medicamento)}>Ver detalhes</button><button className="btn" onClick={() => setCmp(r.id_medicamento)}>Fornecedores anteriores</button>
                 <button className="btn pri" onClick={() => iniciarEntrada(r.id_medicamento)}>Registrar entrada recebida</button>
                 {st ? <button className="btn push" onClick={() => setRec(r.id_medicamento, null)}>Desfazer</button> : <>
-                  <button className="btn crit push" onClick={() => setRec(r.id_medicamento, 'rejeitada')}>Rejeitar</button><button className="btn ok" onClick={() => setRec(r.id_medicamento, 'aprovada')}>Aprovar</button></>}
+                  <button className="btn crit push" onClick={() => setRej(r.id_medicamento)}>Rejeitar</button><button className="btn ok" onClick={() => setRec(r.id_medicamento, 'aprovada')}>Aprovar</button></>}
               </div>
             </Card>
           );
         })}
       </div>
+
+      {rej && (
+        <Modal title="Recusar proposta" onClose={() => setRej(null)}>
+          <p>Tem certeza que deseja recusar a proposta de {itens.find((i) => i.id_medicamento === rej)?.nome}?</p>
+          <div className="acts">
+            <button className="btn" onClick={() => setRej(null)}>Cancelar</button>
+            <button className="btn crit" onClick={() => { setRec(rej, 'rejeitada'); setRej(null); }}>Sim, recusar</button>
+          </div>
+        </Modal>
+      )}
 
       {/* Modal de detalhes do medicamento. */}
       {aberto && det && (
