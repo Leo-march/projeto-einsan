@@ -53,6 +53,59 @@ export interface EstoqueCofre {
   itens: ItemEstoque[];
 }
 
+export interface CondicoesPagamento {
+  prazo_dias: number;
+  desconto_a_vista_pct: number;
+}
+
+export interface OfertaFornecedor {
+  id_medicamento: string;
+  preco_unitario_brl: number;
+  prazo_entrega_dias: number;
+  validade_minima_garantida_dias: number;
+  quantidade_minima_pedido: number;
+  disponibilidade: number;
+  condicoes_pagamento: CondicoesPagamento;
+}
+
+export interface Fornecedor {
+  id_fornecedor: string;
+  nome: string;
+  cadeia_fria_certificada: boolean;
+  confiabilidade_entrega_pct: number;
+  simulado: true;
+  ofertas: OfertaFornecedor[];
+}
+
+export interface ReferenciaPreco {
+  id_medicamento: string;
+  preco_referencia_brl: number;
+  fonte: string;
+}
+
+export interface DadosFornecedores {
+  referencias_preco: ReferenciaPreco[];
+  fornecedores: Fornecedor[];
+}
+
+export type TipoMovimentacao = "ENTRADA" | "SAIDA" | "DISPENSACAO" | "TRANSFERENCIA" | "AJUSTE";
+export type OrigemMovimentacao = "SCANNER" | "MANUAL" | "SEM_LEITURA";
+
+export interface Movimentacao {
+  id_movimento: string;
+  timestamp: string;
+  cofre_id: string;
+  tipo: TipoMovimentacao;
+  id_medicamento: string;
+  codigo_lote: string | null;
+  quantidade: number;
+  origem_registro: OrigemMovimentacao;
+  usuario_biometria_id: string;
+  id_transferencia?: string;
+  cofre_par?: string;
+  sentido_transferencia?: "SAIDA" | "ENTRADA";
+}
+
 // ---------- Saídas (contrato consumido pelo front-end) ----------
 
 export type Severidade = "CRITICA" | "ALTA" | "MEDIA" | "BAIXA";
@@ -122,6 +175,158 @@ export interface RecomendacaoCompra {
   };
   lotes_em_risco_de_vencimento: string[];
   justificativas: string[];
+  custo_referencia_brl: number;
+  preco_referencia_brl: number | null;
+  fonte_preco_referencia: string | null;
+  fornecedor_recomendado: FornecedorRecomendado | null;
+  alternativas_fornecedor: AlternativaFornecedor[];
+  fornecedores_excluidos: FornecedorExcluido[];
+  motivo_sem_fornecedor: string | null;
+  justificativa_fornecedor: string[];
+  fatores_decisao: FatorDecisao[];
+  por_que_nao_o_mais_barato: string | null;
+  justificativa_quantidade: string[];
+  previsao: PrevisaoItem;
+  consumo: ConsumoHistorico;
+  qualidade_dados: QualidadeDados;
+  faixa_quantidade: FaixaQuantidade | null;
+  impacto: ImpactoItem;
+  rastreabilidade: RastreabilidadeMedicamento;
+}
+
+export interface EventoRastreabilidadeLote {
+  tipo: "ENTRADA" | "SAIDA" | "DISPENSACAO" | "TRANSFERENCIA" | "AJUSTE" | "VALIDADE" | "EXCURSAO_TERMICA";
+  timestamp: string;
+  quantidade: number | null;
+  origem_registro: OrigemMovimentacao | null;
+  usuario_biometria_id: string | null;
+  detalhe: string;
+}
+
+export interface LoteRastreabilidade {
+  codigo_lote: string;
+  validade: string;
+  saldo_estoque_cofre: number;
+  saldo_reconstruido: number;
+  divergencia_unidades: number;
+  eventos: EventoRastreabilidadeLote[];
+}
+
+export interface RastreabilidadeMedicamento {
+  lotes: LoteRastreabilidade[];
+  saidas_sem_lote_nao_atribuidas: number;
+  divergencias_lote_abertas: number;
+  margem_incerteza_unidades: number;
+  dados_lote_disponiveis: boolean;
+}
+
+export interface FornecedorRecomendado {
+  id_fornecedor: string;
+  nome: string;
+  simulado: true;
+  preco_unitario_brl: number;
+  preco_efetivo_unitario_brl: number;
+  prazo_entrega_dias: number;
+  cadeia_fria_certificada: boolean;
+  confiabilidade_entrega_pct: number;
+  validade_minima_garantida_dias: number;
+  quantidade_pedida: number;
+  excesso_por_minimo_pedido: number;
+  disponibilidade: number;
+  condicoes_pagamento: CondicoesPagamento;
+  pagamento_escolhido: "A_VISTA" | "A_PRAZO";
+  custo_estimado_total_brl: number;
+  dias_sem_estoque_previstos: number;
+  atraso_vs_prazo_reposicao_dias: number;
+  diferenca_vs_preco_referencia_brl: number | null;
+}
+
+export interface AlternativaFornecedor extends FornecedorRecomendado {
+  diferenca_preco_vs_recomendado_brl: number;
+  diferenca_prazo_vs_recomendado_dias: number;
+}
+
+export interface FatorDecisao {
+  fator: "preco" | "prazo" | "confiabilidade" | "validade";
+  peso_pct: number;
+  valor: string;
+  pontuacao_normalizada: number;
+  contribuicao: number;
+  efeito: string;
+}
+
+export interface PrevisaoItem {
+  data_prevista_ruptura: string | null;
+  data_limite_pedido: string | null;
+  pedido_atrasado: boolean;
+  dias_atraso: number | null;
+  dias_sem_estoque_previstos: number | null;
+  perda_prevista_por_vencimento: { unidades: number; valor_brl: number };
+  perda_por_invalidacao_termica: { unidades: number; valor_brl: number };
+  custo_de_esperar: { valor_brl: number | null; dias_sem_estoque: number | null; atraso_simulado_dias: number };
+  premissas: string[];
+}
+
+export interface ConsumoHistorico {
+  consumo_usado: number;
+  consumo_7d: number;
+  consumo_30d: number;
+  tendencia: "EM_ALTA" | "ESTAVEL" | "EM_BAIXA" | "SEM_HISTORICO";
+  atipicos_detectados: { id_movimento: string; timestamp: string; quantidade: number; motivo: string }[];
+  usou_fallback: boolean;
+  justificativa_fallback: string | null;
+}
+
+export interface QualidadeDados {
+  percentual_saidas_lote_identificado: number;
+  dias_historico: number;
+  movimentacoes_manuais_ou_sem_leitura: number;
+  divergencias_abertas: number;
+  nivel_confianca: "ALTO" | "MEDIO" | "BAIXO";
+  motivo_confianca: string;
+}
+
+export interface FaixaQuantidade {
+  minimo: number;
+  maximo: number;
+  conservadora: number;
+}
+
+export interface PontoSimulacaoDia {
+  dia: number;
+  data: string;
+  estoque_sem_acao: number;
+  estoque_com_recomendacao: number;
+  capital_sem_acao_brl: number;
+  capital_com_recomendacao_brl: number;
+}
+
+export interface ResultadoCenario30Dias {
+  dias_sem_estoque: number;
+  unidades_sem_estoque: number;
+  unidades_vencidas: number;
+  capital_medio_parado_brl: number;
+}
+
+export interface ImpactoItem {
+  capital_imobilizado_brl: number;
+  capital_excedente_brl: number;
+  perdas_evitadas: {
+    vencimento: { unidades: number; valor_brl: number };
+    falta: { unidades: number; valor_brl: number };
+  };
+  simulacao_30_dias: {
+    sem_acao: ResultadoCenario30Dias;
+    com_recomendacao: ResultadoCenario30Dias;
+    pontos_diarios: PontoSimulacaoDia[];
+    premissas: string[];
+  };
+}
+
+export interface FornecedorExcluido {
+  id_fornecedor: string;
+  nome: string;
+  motivo: string;
 }
 
 export interface AnaliseResponse {
@@ -140,8 +345,11 @@ export interface AnaliseResponse {
     lotes_invalidados: number;
     unidades_invalidadas: number;
     divergencias_estoque: number;
+    divergencias_lote: number;
+    saidas_sem_lote_nao_atribuidas: number;
     medicamentos_com_compra_recomendada: number;
     custo_total_recomendado_brl: number;
+    proxima_ruptura: string | null;
   };
   alertas: {
     risco_termico: AlertaRiscoTermico[];

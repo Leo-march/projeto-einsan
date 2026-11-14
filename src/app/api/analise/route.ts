@@ -1,16 +1,8 @@
 import { NextResponse } from "next/server";
-import { promises as fs } from "fs";
-import path from "path";
-import { executarAnalise } from "@/lib/analise";
-import type { Bula, EstoqueCofre, LogHardware } from "@/types/dominio";
+import { obterAnalise } from "@/lib/servico-analise";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic"; // PoC: sempre relê os JSONs
-
-async function lerJson<T>(arquivo: string): Promise<T> {
-  const caminho = path.join(process.cwd(), "data", arquivo);
-  return JSON.parse(await fs.readFile(caminho, "utf-8")) as T;
-}
 
 /**
  * GET /api/analise
@@ -19,14 +11,8 @@ async function lerJson<T>(arquivo: string): Promise<T> {
  */
 export async function GET(request: Request) {
   try {
-    const [bulas, logs, estoque] = await Promise.all([
-      lerJson<Bula[]>("bulas.json"),
-      lerJson<LogHardware[]>("logs_hardware.json"),
-      lerJson<EstoqueCofre>("estoque_cofre.json"),
-    ]);
-
     const param = new URL(request.url).searchParams.get("data_referencia");
-    let refMs: number;
+    let refMs: number | undefined;
 
     if (param) {
       refMs = Date.parse(param);
@@ -36,15 +22,9 @@ export async function GET(request: Request) {
           { status: 400 }
         );
       }
-    } else {
-      const ultimo = logs
-        .map((l) => Date.parse(l.timestamp))
-        .filter((n) => !Number.isNaN(n))
-        .sort((a, b) => b - a)[0];
-      refMs = ultimo ?? Date.now();
     }
 
-    return NextResponse.json(executarAnalise(bulas, logs, estoque, refMs));
+    return NextResponse.json(await obterAnalise(refMs));
   } catch (err) {
     console.error("[/api/analise]", err);
     return NextResponse.json(
