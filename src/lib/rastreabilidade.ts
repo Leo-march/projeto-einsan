@@ -59,12 +59,22 @@ export function reconstruirRastreabilidade(
     let divergenciasLote = 0;
     let incertezaLotes = 0;
 
+    // Recebimentos diferentes podem repetir o código impresso do lote: o livro é somado por código,
+    // então a comparação também é feita por código (e a divergência é contada uma única vez).
+    const codigosJaComparados = new Set<string>();
     const lotes = item.lotes.map((lote) => {
       const movimentosLote = movimentos
         .filter((movimento) => movimento.codigo_lote === lote.codigo_lote)
         .sort((left, right) => Date.parse(left.timestamp) - Date.parse(right.timestamp));
-      const saldoReconstruido = movimentosLote.reduce((saldo, movimento) => saldo + deltaSaldo(movimento), 0);
-      const divergencia = saldoReconstruido - lote.quantidade;
+      const saldoLivroDoCodigo = movimentosLote.reduce((saldo, movimento) => saldo + deltaSaldo(movimento), 0);
+      const saldoEstoqueDoCodigo = item.lotes
+        .filter((outro) => outro.codigo_lote === lote.codigo_lote)
+        .reduce((soma, outro) => soma + outro.quantidade, 0);
+      const divergenciaDoCodigo = saldoLivroDoCodigo - saldoEstoqueDoCodigo;
+      const primeiraLinhaDoCodigo = !codigosJaComparados.has(lote.codigo_lote);
+      codigosJaComparados.add(lote.codigo_lote);
+      const divergencia = primeiraLinhaDoCodigo ? divergenciaDoCodigo : 0;
+      const saldoReconstruido = lote.quantidade + divergencia;
       if (divergencia !== 0) {
         divergenciasLote += 1;
         incertezaLotes += Math.abs(divergencia);

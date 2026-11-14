@@ -13,6 +13,9 @@ export type AnaliseApi = {
     cobertura_dias: number | null; prazo_reposicao_dias: number;
     estoque: { bruto: number; invalidado_termico: number; vencido: number; em_risco_de_vencimento: number; margem_incerteza_divergencia: number; util: number };
     justificativas: string[];
+    fornecedor_recomendado?: { id_fornecedor: string; nome: string; preco_efetivo_unitario_brl: number; prazo_entrega_dias: number; confiabilidade_entrega_pct: number; custo_estimado_total_brl: number } | null;
+    alternativas_fornecedor?: { id_fornecedor: string; nome: string; prazo_entrega_dias: number; diferenca_preco_vs_recomendado_brl: number }[];
+    por_que_nao_o_mais_barato?: string | null;
   }[];
   qualidade_dados?: QualidadeApi;
 };
