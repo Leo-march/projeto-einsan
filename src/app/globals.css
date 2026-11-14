@@ -6,24 +6,26 @@
    ========================================================================== */
 
 :root {
-    --bg: #f5f9fd;
+    --bg: #f1f8fb;
     --card: #ffffff;
-    --surface2: #eef4fa;
-    --surface3: #e5eef8;
-    --line: #e3e7ec;
-    --line2: #c4c7c5;
-    --tx: #1f1f1f;
-    --mu: #5f6368;
-    --dim: #80868b;
+    --surface2: #eaf4f9;
+    --surface3: #dfedf5;
+    --line: #d8e6ee;
+    --line2: #b7cbd8;
+    --tx: #12202b;
+    --mu: #51646f;
+    --dim: #7a8d98;
 
-    --blue: #0b57d0;
-    --blue-h: #0a4cb8;
-    --blue-c: #d3e3fd;
-    --ice: #d4e8ff;
-    --ice-d: #7cb4ee;
-    --blue-s: #e7f1fc;
-    --on-blue-c: #041e49;
+    /* identidade San: azul-geleira + gelo, sem o azul/cinza do Google */
+    --blue: #0a6190;
+    --blue-h: #084f77;
+    --blue-c: #cde7f5;
+    --ice: #d4ecfa;
+    --ice-d: #6db6dc;
+    --blue-s: #e4f3fb;
+    --on-blue-c: #05283d;
     --navy: #0b2545;
+    --frost: #aad8ef;
 
     --ok: #146c2e;
     --ok-c: #c4eed0;
@@ -33,9 +35,9 @@
     --crit-c: #f9dedc;
 
     --r: 12px;
-    --sans: var(--font-ui), 'Google Sans', 'Segoe UI', system-ui, -apple-system, sans-serif;
-    --elev1: 0 1px 2px rgba(60, 64, 67, .22), 0 1px 3px 1px rgba(60, 64, 67, .12);
-    --elev3: 0 4px 8px 3px rgba(60, 64, 67, .15), 0 1px 3px rgba(60, 64, 67, .3);
+    --sans: var(--font-ui), 'Segoe UI', system-ui, -apple-system, sans-serif;
+    --elev1: 0 1px 2px rgba(11, 37, 69, .14), 0 2px 8px rgba(11, 37, 69, .08);
+    --elev3: 0 10px 30px rgba(11, 37, 69, .18), 0 2px 6px rgba(11, 37, 69, .12);
 
     color-scheme: light;
 }
@@ -98,6 +100,7 @@ code {
 
 .shell {
     position: relative;
+    isolation: isolate; /* cria o contexto de empilhamento: neve (0) < conteúdo (1+) */
     min-height: 100vh;
     display: flex;
     flex-direction: column
@@ -119,7 +122,7 @@ code {
 /* Barra superior: marca, busca central, ações */
 .top {
     position: relative;
-    z-index: 1;
+    z-index: 30; /* acima das abas (25), para o lançador e os alertas não ficarem por baixo */
     height: 68px;
     display: flex;
     align-items: center;
@@ -165,19 +168,30 @@ code {
     align-items: center;
     gap: 14px;
     padding: 0 16px 0 18px;
-    border: 0;
-    border-radius: 28px;
-    background: var(--surface3);
+    border: 1.5px solid var(--frost);
+    border-radius: 14px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, .85), rgba(228, 243, 251, .85));
+    backdrop-filter: blur(6px);
     color: var(--mu);
     cursor: text;
     text-align: left;
     font-size: 15px;
-    transition: background .15s, box-shadow .15s
+    transition: border-color .15s, box-shadow .15s
 }
 
 .omni:hover {
-    background: #fff;
-    box-shadow: var(--elev1)
+    border-color: var(--blue);
+    box-shadow: 0 0 0 4px rgba(109, 182, 220, .25)
+}
+
+.omni>svg {
+    flex: none;
+    box-sizing: content-box;
+    padding: 6px;
+    margin-left: -8px;
+    border-radius: 9px;
+    background: var(--ice);
+    color: var(--blue)
 }
 
 .omni span {
@@ -215,7 +229,7 @@ kbd {
     gap: 8px;
     height: 32px;
     padding: 0 14px 0 12px;
-    border-radius: 16px;
+    border-radius: 10px;
     background: var(--ok-c);
     color: var(--ok);
     font-size: 13px;
@@ -248,19 +262,33 @@ kbd {
     background: none;
     border: 0;
     cursor: pointer;
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    border: 1px solid transparent;
     display: grid;
     place-items: center;
-    color: var(--mu);
+    color: var(--navy);
     position: relative;
-    transition: background .15s
+    transition: background .15s, border-color .15s
 }
 
 .icon-btn:hover,
 .icon-btn[aria-expanded="true"] {
-    background: var(--surface3)
+    background: var(--ice);
+    border-color: var(--frost)
+}
+
+/* botão com texto: o lançador de seções deixa de ser a "grade de pontos" */
+.icon-btn.com-rotulo {
+    width: auto;
+    padding: 0 14px 0 11px;
+    gap: 8px;
+    grid-auto-flow: column;
+    font-size: 13.5px;
+    font-weight: 600;
+    border-color: var(--line2);
+    background: var(--card)
 }
 
 .dot {
@@ -283,31 +311,20 @@ kbd {
 .avatar {
     width: 36px;
     height: 36px;
-    border-radius: 50%;
-    background: var(--navy);
-    color: #fff;
+    border-radius: 10px;
+    background: linear-gradient(145deg, var(--navy), #14507a);
+    color: var(--ice);
+    border: 1.5px solid var(--frost);
     display: grid;
     place-items: center;
     font-size: 12.5px;
-    font-weight: 600;
+    font-weight: 700;
+    letter-spacing: .02em;
     margin-left: 6px;
     flex: none
 }
 
-/* Lançador (grade 3×3) */
-.waffle {
-    display: grid;
-    grid-template-columns: repeat(3, 4px);
-    gap: 3px
-}
-
-.waffle i {
-    width: 4px;
-    height: 4px;
-    border-radius: 50%;
-    background: currentColor
-}
-
+/* Lançador de seções */
 .launcher {
     position: absolute;
     right: 0;
@@ -316,9 +333,10 @@ kbd {
     max-width: calc(100vw - 24px);
     z-index: 45;
     background: var(--card);
-    border-radius: 24px;
+    border: 1px solid var(--line);
+    border-radius: 18px;
     box-shadow: var(--elev3);
-    padding: 18px 12px 12px
+    padding: 14px 10px 10px
 }
 
 .launcher-g {
@@ -333,7 +351,7 @@ kbd {
     align-items: center;
     gap: 8px;
     padding: 12px 4px 10px;
-    border-radius: 16px;
+    border-radius: 12px;
     text-align: center;
     font-size: 12.5px;
     font-weight: 500;
@@ -352,31 +370,19 @@ kbd {
 .launcher .ic {
     width: 48px;
     height: 48px;
-    border-radius: 50%;
+    border-radius: 14px;
     display: grid;
     place-items: center;
-    background: var(--blue-c);
-    color: var(--on-blue-c)
+    background: var(--ice);
+    border: 1px solid var(--frost);
+    color: var(--navy)
 }
 
-.launcher a:nth-child(5n+2) .ic {
-    background: var(--ok-c);
-    color: #0b3d1a
-}
-
-.launcher a:nth-child(5n+3) .ic {
-    background: var(--warn-c);
-    color: #4a2b00
-}
-
-.launcher a:nth-child(5n+4) .ic {
-    background: #e8def8;
-    color: #1d192b
-}
-
-.launcher a:nth-child(5n) .ic {
-    background: #c7ecf5;
-    color: #062e38
+.launcher a:hover .ic,
+.launcher a.on .ic {
+    background: var(--navy);
+    border-color: var(--navy);
+    color: var(--ice)
 }
 
 /* Abas de seção, como nos resultados de busca */
@@ -384,11 +390,12 @@ kbd {
     position: sticky;
     top: 0;
     z-index: 25;
-    background: var(--bg);
+    background: rgba(241, 248, 251, .92);
+    backdrop-filter: blur(8px);
     border-bottom: 1px solid var(--line);
-    padding: 0 20px 0 24px;
+    padding: 7px 20px 7px 24px;
     display: flex;
-    gap: 2px;
+    gap: 6px;
     overflow-x: auto;
     scrollbar-width: none
 }
@@ -402,38 +409,31 @@ kbd {
     flex: none;
     display: flex;
     align-items: center;
-    height: 46px;
-    padding: 0 16px;
+    height: 36px;
+    padding: 0 15px;
     font-size: 14px;
     font-weight: 500;
     color: var(--mu);
-    border-radius: 12px 12px 0 0;
+    border-radius: 10px;
     transition: color .15s, background .15s
 }
 
 .tabs a:hover {
-    color: var(--tx);
-    background: var(--surface2)
+    color: var(--navy);
+    background: var(--surface3)
 }
 
 .tabs a.on {
-    color: var(--blue)
-}
-
-.tabs a.on::after {
-    content: "";
-    position: absolute;
-    left: 10px;
-    right: 10px;
-    bottom: 0;
-    height: 3px;
-    border-radius: 3px 3px 0 0;
-    background: var(--blue)
+    color: var(--ice);
+    background: var(--navy);
+    font-weight: 600
 }
 
 /* ---------- Página ---------- */
 
 .page {
+    position: relative;
+    z-index: 1;
     width: 100%;
     max-width: 1480px;
     margin: 0 auto;
@@ -550,19 +550,20 @@ kbd {
     align-items: center;
     gap: 14px;
     padding: 0 20px;
-    border: 1px solid var(--line);
-    border-radius: 28px;
+    border: 1.5px solid var(--frost);
+    border-radius: 16px;
     background: var(--card);
     color: var(--mu);
     font-size: 16px;
     cursor: text;
     text-align: left;
     box-shadow: var(--elev1);
-    transition: box-shadow .15s
+    transition: box-shadow .15s, border-color .15s
 }
 
 .hero-search:hover {
-    box-shadow: var(--elev3)
+    border-color: var(--blue);
+    box-shadow: 0 0 0 4px rgba(109, 182, 220, .25)
 }
 
 .hero-search span {
@@ -587,8 +588,8 @@ kbd {
     gap: 8px;
     height: 36px;
     padding: 0 16px 0 12px;
-    border: 1px solid var(--line2);
-    border-radius: 18px;
+    border: 1px solid var(--frost);
+    border-radius: 10px;
     background: var(--card);
     font-weight: 500;
     font-size: 13.5px;
@@ -653,7 +654,7 @@ kbd {
     position: fixed;
     inset: 0;
     z-index: 70;
-    background: rgba(32, 33, 36, .45);
+    background: rgba(11, 37, 69, .45);
     display: flex;
     justify-content: center;
     align-items: flex-start;
@@ -663,7 +664,8 @@ kbd {
 .pal {
     width: min(700px, 100%);
     background: var(--card);
-    border-radius: 28px;
+    border: 1.5px solid var(--frost);
+    border-radius: 20px;
     box-shadow: var(--elev3);
     display: flex;
     flex-direction: column;
@@ -677,8 +679,8 @@ kbd {
     gap: 14px;
     margin: 12px 12px 4px;
     padding: 0 18px;
-    border-radius: 28px;
-    background: var(--surface3);
+    border-radius: 14px;
+    background: var(--surface2);
     color: var(--mu)
 }
 
@@ -1173,7 +1175,7 @@ textarea:focus {
 .overlay {
     position: fixed;
     inset: 0;
-    background: rgba(32, 33, 36, .45);
+    background: rgba(11, 37, 69, .45);
     display: grid;
     place-items: center;
     z-index: 50;
@@ -1271,7 +1273,7 @@ textarea:focus {
 }
 
 .ai {
-    border-color: #a8c7fa
+    border-color: var(--frost)
 }
 
 .ai h4 {
@@ -1300,7 +1302,7 @@ p.j {
 }
 
 .note code {
-    background: rgba(11, 87, 208, .1)
+    background: rgba(10, 97, 144, .1)
 }
 
 .san-note {
@@ -1342,7 +1344,7 @@ p.j {
     inset: 0;
     overflow: hidden;
     pointer-events: none;
-    z-index: 30
+    z-index: 0
 }
 
 .flake {

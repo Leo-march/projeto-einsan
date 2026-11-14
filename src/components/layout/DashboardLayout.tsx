@@ -18,6 +18,7 @@ import {
   Search,
   Snowflake,
   ThermometerSnowflake,
+  LayoutGrid,
 } from 'lucide-react';
 import { useStore } from '@/context/Store';
 import { Badge } from '@/components/ui';
@@ -229,14 +230,13 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
           <div className="rel" ref={relGrade}>
             <button
-              className="icon-btn"
+              className="icon-btn com-rotulo"
               aria-label="Todas as seções"
               aria-expanded={grade}
               onClick={() => { setGrade(!grade); setBell(false); }}
             >
-              <span className="waffle" aria-hidden="true">
-                {Array.from({ length: 9 }, (_, k) => <i key={k} />)}
-              </span>
+              <LayoutGrid size={18} aria-hidden="true" />
+              <span>Seções</span>
             </button>
 
             {grade && (
