@@ -1,0 +1,35 @@
+{
+  "cofre_id": "COFRE-01",
+  "itens": [
+    {
+      "id_medicamento": "MED-001",
+      "custo_unitario_brl": 3600,
+      "prazo_reposicao_dias": 3,
+      "estoque_seguranca_dias": 3
+    },
+    {
+      "id_medicamento": "MED-002",
+      "custo_unitario_brl": 5500,
+      "prazo_reposicao_dias": 5,
+      "estoque_seguranca_dias": 5
+    },
+    {
+      "id_medicamento": "MED-003",
+      "custo_unitario_brl": 14000,
+      "prazo_reposicao_dias": 5,
+      "estoque_seguranca_dias": 4
+    },
+    {
+      "id_medicamento": "MED-004",
+      "custo_unitario_brl": 18500,
+      "prazo_reposicao_dias": 7,
+      "estoque_seguranca_dias": 5
+    },
+    {
+      "id_medicamento": "MED-005",
+      "custo_unitario_brl": 2100,
+      "prazo_reposicao_dias": 3,
+      "estoque_seguranca_dias": 3
+    }
+  ]
+}

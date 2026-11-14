@@ -19,5 +19,19 @@
     "temp_min_celsius": 2,
     "temp_max_celsius": 8,
     "alerta_exposicao_minutos": 90
+  },
+  {
+    "id_medicamento": "MED-004",
+    "nome": "Keytruda (pembrolizumabe) 100mg",
+    "temp_min_celsius": 2,
+    "temp_max_celsius": 8,
+    "alerta_exposicao_minutos": 60
+  },
+  {
+    "id_medicamento": "MED-005",
+    "nome": "Enbrel (etanercepte) 50mg",
+    "temp_min_celsius": 2,
+    "temp_max_celsius": 8,
+    "alerta_exposicao_minutos": 120
   }
 ]

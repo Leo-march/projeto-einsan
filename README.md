@@ -1,26 +1,26 @@
-# Medical Security x Bulário Anvisa
+# Projeto Einsan
 
-Painel web para exibir a análise operacional devolvida pelo endpoint local `GET /api/analise`.
+PoC de uma API Next.js para acompanhar estoque de medicamentos refrigerados, eventos do cofre, risco de excursão térmica e recomendações de reposição. O front-end ainda é o template inicial do Next.js; as rotas abaixo são a interface disponível para integrá-lo.
 
-## Executar
+## Executar localmente
 
 ```bash
 npm install
 npm run dev
 ```
 
-Abra `http://localhost:3000`. O endpoint aceita `data_referencia` opcional em ISO 8601, por exemplo `GET /api/analise?data_referencia=2026-11-14T15:30:00-03:00`.
-
-## Dados e processamento
-
-A rota `src/app/api/analise/route.ts` e a página consultam o mesmo serviço server-only em `src/lib/servico-analise.ts`. Esse serviço lê `data/bulas.json`, `data/logs_hardware.json` e `data/estoque_cofre.json`, executa `src/lib/analise.ts` e produz `AnaliseResponse`, tipado em `src/types/dominio.ts`.
-
-A interface apresenta os valores e justificativas da análise sem recalcular o estoque. Os arquivos JSON em `data/` são entradas do processamento e devem permanecer disponíveis.
-
-## Verificações
+A aplicação fica disponível em `http://localhost:3000`. Para compilar e executar em modo de produção:
 
 ```bash
-npm run lint
-npm test
 npm run build
+npm run start
 ```
+a
+## Documentação
+
+- [Guia completo atualizado — PDF](docs/guia-api-cofre-inteligente-atualizado.pdf)
+- [Fonte HTML do guia](docs/guia-api-cofre-inteligente-atualizado.html)
+
+## Dados e persistência
+
+Os dados da PoC são carregados dos arquivos JSON em `data/`. O `POST /api/movimentacoes` grava diretamente em `data/movimentacoes_estoque.json`; portanto, a execução precisa de um disco gravável e persistente. Essa abordagem é adequada para desenvolvimento ou servidor próprio, mas não oferece persistência confiável em ambientes serverless/efêmeros nem controle de concorrência.

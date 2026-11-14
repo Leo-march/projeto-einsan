@@ -144,6 +144,8 @@ export interface AlertaMovimentacaoNaoIdentificada {
   porta_fechada_em: string;
   duracao_segundos: number;
   usuario_biometria_id: string | null;
+  /** true quando houve saída lançada manualmente no mesmo intervalo (ainda vale a conferência) */
+  regularizada_por_lancamento_manual: boolean;
   mensagem: string;
 }
 
@@ -357,4 +359,97 @@ export interface AnaliseResponse {
   };
   avaliacoes_termicas: AvaliacaoTermica[];
   recomendacoes_compra: RecomendacaoCompra[];
+  qualidade_dados: QualidadeDados;
+}
+
+// ---------- Livro de estoque (entradas, saídas, transferências) ----------
+
+export type TipoMovimentacao =
+  | "ENTRADA_COMPRA"
+  | "ENTRADA_TRANSFERENCIA"
+  | "SAIDA_DISPENSACAO"
+  | "SAIDA_TRANSFERENCIA"
+  | "SAIDA_DESCARTE"
+  | "AJUSTE_INVENTARIO";
+
+export type OrigemRegistro = "SCANNER" | "MANUAL" | "INTEGRACAO_NF";
+
+export interface MovimentacaoEstoque {
+  id_movimentacao: string;
+  cofre_id: string;
+  timestamp: string;
+  tipo: TipoMovimentacao;
+  id_medicamento: string;
+  codigo_lote: string;
+  /** Sempre positiva, exceto em AJUSTE_INVENTARIO (negativa = sobra a menos no físico) */
+  quantidade: number;
+  /** Obrigatória na primeira entrada de um lote (YYYY-MM-DD) */
+  validade?: string;
+  /** Fornecedor ou unidade de origem/destino */
+  contraparte?: string;
+  documento?: string;
+  usuario_id?: string;
+  origem_registro: OrigemRegistro;
+  /** id_evento do LEITURA_SCANNER que originou a baixa */
+  ref_evento_hardware?: string;
+  observacao?: string;
+}
+
+export interface MovimentacaoComSaldo extends MovimentacaoEstoque {
+  saldo_lote_apos: number;
+}
+
+export interface ParametroReposicao {
+  id_medicamento: string;
+  custo_unitario_brl: number;
+  prazo_reposicao_dias: number;
+  estoque_seguranca_dias: number;
+}
+
+export interface ParametrosCofre {
+  cofre_id: string;
+  itens: ParametroReposicao[];
+}
+
+export interface AvisoQualidade {
+  codigo:
+    | "MOVIMENTACAO_DUPLICADA"
+    | "TIMESTAMP_INVALIDO"
+    | "MEDICAMENTO_DESCONHECIDO"
+    | "ENTRADA_SEM_VALIDADE"
+    | "LOTE_SEM_ENTRADA"
+    | "SALDO_NEGATIVO"
+    | "HISTORICO_CURTO"
+    | "SEM_CONSUMO_NA_JANELA"
+    | "BIPAGEM_SEM_BAIXA";
+  severidade: "INFO" | "ATENCAO";
+  mensagem: string;
+  id_referencia?: string;
+}
+
+export interface QualidadeDados {
+  movimentacoes_processadas: number;
+  movimentacoes_ignoradas: number;
+  percentual_lancamento_manual: number;
+  avisos: AvisoQualidade[];
+}
+
+export type StatusLote = "OK" | "VENCE_EM_30_DIAS" | "VENCIDO" | "INVALIDADO_TERMICO";
+
+export interface VisaoEstoque {
+  itens: {
+    id_medicamento: string;
+    nome: string;
+    saldo_registrado: number;
+    valor_imobilizado_brl: number;
+    consumo_medio_diario: number;
+    lotes: {
+      codigo_lote: string;
+      quantidade: number;
+      validade: string;
+      dias_para_vencer: number;
+      status: StatusLote;
+    }[];
+  }[];
+  totais: { unidades: number; valor_imobilizado_brl: number; lotes_em_alerta: number };
 }
