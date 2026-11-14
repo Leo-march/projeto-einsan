@@ -171,10 +171,10 @@ export function SugestaoCompra({ analise, estoque, movs, itens }: {
         return (
           <div key={r.id_medicamento} style={{ marginBottom: 22 }}>
             <h4 style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>{r.nome}</h4>
-            <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', background: '#f3f0ff', border: '1px solid #ddd6fe', borderRadius: 'var(--r)', padding: '10px 14px', marginBottom: 12 }}>
-              <span style={{ flex: 'none', lineHeight: 0 }}><SanIcone size={44} animado={false} /></span>
+            <div className="san-note">
+              <span style={{ flex: 'none', lineHeight: 0 }}><SanIcone size={40} animado={false} /></span>
               <div>
-                <div style={{ fontSize: 12, fontWeight: 600, color: '#6d4fd1', marginBottom: 2 }}>Análise do San</div>
+                <div className="tag">Análise do San</div>
                 <p>{textoIA}</p>
                 <button
                   type="button"
