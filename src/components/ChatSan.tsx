@@ -78,7 +78,7 @@ export function ChatSan({ titulo, mensagemInicial, resumo = [], sugestoes = [], 
       <div className={styles.fundo} onClick={onClose} aria-hidden="true" />
       <aside className={styles.painel} role="complementary" aria-label="Conversa com o San">
         <header className={styles.topo}>
-          <div className={styles.avatar}><SanIcone size={40} /></div>
+          <div className={styles.avatar}><SanIcone size={58} /></div>
           <div className={styles.identidade}>
             <b>San</b>
             <span><i className={styles.online} />Assistente de compras · simulação</span>

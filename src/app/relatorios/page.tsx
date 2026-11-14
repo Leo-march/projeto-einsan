@@ -5,7 +5,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContaine
 import { useStore } from '@/context/Store';
 import { Card, DataTable, Sel, type Col } from '@/components/ui';
 import { EstadoApi } from '@/components/AvisoApi';
-import { AreaValor, BarrasH, EntSai, LinhaConsumo, C } from '@/components/charts/Charts';
+import { AreaValor, BarrasH, EntSai, LinhaConsumo, C, ax, TT } from '@/components/charts/Charts';
 import { brl } from '@/utils/calculations';
 import { compras, consumoPorMed, fornecedores, serieMensal, type Compra } from '@/utils/derivados';
 import { dataApiBR } from '@/utils/apiHelpers';
@@ -39,8 +39,8 @@ export default function Relatorios() {
         <Card title="Consumo mensal (dispensações)"><LinhaConsumo data={serie} /></Card>
         <Card title="Dispensações por medicamento (histórico)"><BarrasH data={porMed} /></Card>
         <Card title="Entradas e saídas"><EntSai data={serie} /></Card>
-        <Card title="Perdas por descarte (R$)"><div style={{ height: 280 }}><ResponsiveContainer width="100%" height="100%"><BarChart data={serie}><CartesianGrid stroke={C.grid} vertical={false} /><XAxis dataKey="mes" tick={{ fontSize: 12 }} /><YAxis tick={{ fontSize: 12 }} /><Tooltip formatter={(v) => brl(+(v ?? 0))} /><Bar name="Descartes" dataKey="valorPerdas" fill={C.red} radius={[3, 3, 0, 0]} /></BarChart></ResponsiveContainer></div></Card>
-        <Card title="Unidades compradas por fornecedor"><div style={{ height: 280 }}><ResponsiveContainer width="100%" height="100%"><BarChart data={porForn}><CartesianGrid stroke={C.grid} vertical={false} /><XAxis dataKey="nome" tick={{ fontSize: 12 }} /><YAxis tick={{ fontSize: 12 }} /><Tooltip /><Bar name="Unidades" dataKey="unidades" fill={C.blue} radius={[3, 3, 0, 0]} /></BarChart></ResponsiveContainer></div></Card>
+        <Card title="Perdas por descarte (R$)"><div style={{ height: 280 }}><ResponsiveContainer width="100%" height="100%"><BarChart data={serie}><CartesianGrid stroke={C.grid} vertical={false} /><XAxis dataKey="mes" {...ax} /><YAxis {...ax} /><Tooltip {...TT} formatter={(v) => brl(+(v ?? 0))} /><Bar name="Descartes" dataKey="valorPerdas" fill={C.red} radius={0} /></BarChart></ResponsiveContainer></div></Card>
+        <Card title="Unidades compradas por fornecedor"><div style={{ height: 280 }}><ResponsiveContainer width="100%" height="100%"><BarChart data={porForn}><CartesianGrid stroke={C.grid} vertical={false} /><XAxis dataKey="nome" {...ax} /><YAxis {...ax} /><Tooltip {...TT} /><Bar name="Unidades" dataKey="unidades" fill={C.blue} radius={0} /></BarChart></ResponsiveContainer></div></Card>
       </div>
       <Card title="Histórico de compras"><DataTable rows={lista} cols={cols} /></Card>
     </>
