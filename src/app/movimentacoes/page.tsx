@@ -22,7 +22,7 @@ export default function Movimentacoes() {
     <Card>
       <div className="bar">
         <Sel label="Tipo" value={tipo} onChange={setTipo} opts={['Todos', 'Entrada', 'Saída', 'Transferência', 'Ajuste']} />
-        <Sel label="Medicamento" value={med} onChange={setMed} opts={['Todos', ...meds.map((m) => m.nome)]} />
+        <Sel label="Medicamento" value={med} onChange={setMed} opts={['Todos', ...Array.from(new Set(meds.map((m) => m.nome)))]} />
         <label>De <input type="date" value={de} onChange={(e) => setDe(e.target.value)} /></label>
         <label>Até <input type="date" value={ate} onChange={(e) => setAte(e.target.value)} /></label>
       </div>
