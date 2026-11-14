@@ -11,7 +11,7 @@ import { consumoPorMed, serieMensal } from '@/utils/derivados';
 import { ACAO, alertasDaApi, dataHoraBR, statusLabel, statusTone, urgTone } from '@/utils/apiHelpers';
 
 export default function Dashboard() {
-  const { analise, estoque, movs, custo, recStatus } = useStore();
+  const { analise, estoque, movs, custo } = useStore();
   const serie = useMemo(() => serieMensal(movs, custo), [movs, custo]);
   const top = useMemo(() => {
     const c = consumoPorMed(movs);
@@ -20,11 +20,7 @@ export default function Dashboard() {
   const porMed = (estoque?.itens ?? []).map((i) => ({ nome: i.nome.split(' ')[0], valor: Math.round(i.valor_imobilizado_brl) }));
 
   const alertas = analise ? alertasDaApi(analise) : [];
-  const recs = (analise?.recomendacoes_compra ?? []).filter(
-  (r) =>
-    r.recomendar_compra !== false &&
-    recStatus[r.id_medicamento] !== 'rejeitada'
-);
+  const recs = (analise?.recomendacoes_compra ?? []).filter((r) => r.recomendar_compra !== false);
   const crit = recs.filter((r) => r.urgencia === 'CRITICA').length;
   const baixo = recs.filter((r) => r.urgencia === 'ALTA' || r.urgencia === 'MEDIA').length;
   const venc = (estoque?.itens ?? []).reduce((n, i) => n + i.lotes.filter((l) => l.status === 'VENCE_EM_30_DIAS').length, 0);
