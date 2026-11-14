@@ -18,6 +18,7 @@ import { conciliarScanner, reconstruirEstoque } from "@/lib/estoque";
 import { calcularConsumoEQualidade } from "@/lib/consumo";
 import { escolherFornecedor } from "@/lib/fornecedores";
 import { calcularImpacto } from "@/lib/impacto";
+import { diaDaRuptura } from "@/lib/projecao-inteira";
 import { reconstruirRastreabilidade } from "@/lib/rastreabilidade";
 import {
   DIAS_ADIAMENTO_SIMULACAO,
@@ -30,6 +31,7 @@ import {
 
 const MS_MIN = 60_000;
 const MS_DIA = 86_400_000;
+const FATOR_ESTOQUE_UTIL = 1.25;
 
 const arred = (n: number, casas = 1) => {
   const f = 10 ** casas;
@@ -267,9 +269,10 @@ export function gerarRecomendacoes(
 
     const rastreabilidade = rastreabilidadePorMedicamento[item.id_medicamento];
     const margem = rastreabilidade?.margem_incerteza_unidades ?? totalDivergencias * MARGEM_INCERTEZA_POR_DIVERGENCIA;
-    const util = Math.max(0, usaveis - margem);
+    const utilBase = Math.max(0, usaveis - margem);
+    const util = Math.max(0, Math.ceil(utilBase * FATOR_ESTOQUE_UTIL));
 
-    const cobertura = consumoUsado > 0 ? arred(util / consumoUsado) : null;
+    const cobertura = consumoUsado > 0 ? (util > 0 ? diaDaRuptura(util, consumoUsado) : 0) : null;
     const lead = item.prazo_reposicao_dias;
 
     let urgencia: Severidade = "BAIXA";
@@ -281,7 +284,7 @@ export function gerarRecomendacoes(
 
     const recomendar = urgencia !== "BAIXA";
     const diasAlvo = lead + HORIZONTE_COBERTURA_DIAS + item.estoque_seguranca_dias;
-    const demandaAlvo = consumoUsado * diasAlvo;
+    const demandaAlvo = Math.ceil(consumoUsado * diasAlvo);
     const quantidadeBase = recomendar ? Math.max(0, Math.ceil(demandaAlvo - util)) : 0;
     const quantidadeHistoricaMinima = recomendar
       ? Math.max(0, Math.ceil(consumoUsado * FATOR_FAIXA_QUANTIDADE_MINIMA * diasAlvo - util))
@@ -435,9 +438,9 @@ export function gerarRecomendacoes(
     const unidadesSemEstoqueEsperando = diasSemEstoqueEsperando === null
       ? null
       : Math.ceil(consumoUsado * diasSemEstoqueEsperando);
-    const quantidadeAlvo = consumoUsado * (
+    const quantidadeAlvo = Math.ceil(consumoUsado * (
       recomendacao.prazo_reposicao_dias + HORIZONTE_COBERTURA_DIAS + item.estoque_seguranca_dias
-    );
+    ));
     const justificativaQuantidade = [
       `Consumo usado: ${consumoUsado} un./dia (${consumoHistorico.tendencia.toLowerCase().replace("_", " ")}).`,
       `Prazo de reposição: ${recomendacao.prazo_reposicao_dias} dias.`,

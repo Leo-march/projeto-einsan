@@ -33,9 +33,25 @@ describe("calcularConsumoEQualidade", () => {
     const movimentos = [saida("S-1", 3, 1, "L-1"), saida("S-2", 8, 1, "L-1"), saida("S-3", 14, 1, "L-1")];
     const resultado = calcularConsumoEQualidade("MED-TESTE", "COFRE-01", movimentos, referenciaMs, 0.4, 0);
 
-    expect(resultado.consumo.consumo_usado).toBe(0.4);
+    expect(resultado.consumo.consumo_usado).toBe(0);
     expect(resultado.consumo.usou_fallback).toBe(true);
     expect(resultado.consumo.justificativa_fallback).toContain("3 saídas regulares");
+  });
+
+  it("arredonda o consumo diário para unidade inteira quando o uso real é cotidiano", () => {
+    const movimentos = [
+      saida("S-1", 1, 4, "L-1"),
+      saida("S-2", 2, 4, "L-1"),
+      saida("S-3", 3, 4, "L-1"),
+      saida("S-4", 4, 4, "L-1"),
+      saida("S-5", 5, 4, "L-1"),
+      saida("S-6", 6, 4, "L-1"),
+      saida("S-7", 7, 4, "L-1"),
+    ];
+    const resultado = calcularConsumoEQualidade("MED-TESTE", "COFRE-01", movimentos, referenciaMs, 0, 0);
+
+    expect(resultado.consumo.consumo_usado).toBe(4);
+    expect(Number.isInteger(resultado.consumo.consumo_usado)).toBe(true);
   });
 
   it("exclui um pico isolado da projeção e reduz confiança para saída sem lote", () => {
@@ -53,7 +69,7 @@ describe("calcularConsumoEQualidade", () => {
     expect(resultado.consumo.consumo_7d).toBe(10);
     expect(resultado.consumo.consumo_30d).toBe(14);
     expect(resultado.consumo.atipicos_detectados.map((item) => item.id_movimento)).toEqual(["S-7-PICO"]);
-    expect(resultado.consumo.consumo_usado).toBeCloseTo(0.26, 5);
+    expect(resultado.consumo.consumo_usado).toBe(1);
     expect(resultado.qualidade.percentual_saidas_lote_identificado).toBe(86);
     expect(resultado.qualidade.nivel_confianca).toBe("BAIXO");
     expect(resultado.qualidade.divergencias_abertas).toBe(1);

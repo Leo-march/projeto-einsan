@@ -113,6 +113,11 @@ export function reconstruirEstoque(
     const saidas = soma(
       doMed.filter((m) => m.tipo === "SAIDA_DISPENSACAO" && Date.parse(m.timestamp) >= inicioJanela).map((m) => m.quantidade)
     );
+    const diasComMovimento = new Set(
+      doMed
+        .filter((m) => m.tipo === "SAIDA_DISPENSACAO" && Date.parse(m.timestamp) >= inicioJanela)
+        .map((m) => new Date(Date.parse(m.timestamp)).toISOString().slice(0, 10))
+    ).size;
     if (primeira && diasHist < 14) {
       avisos.push({ codigo: "HISTORICO_CURTO", severidade: "INFO", mensagem: `${p.id_medicamento}: apenas ${Math.floor(diasHist)} dia(s) de histórico; o consumo estimado é pouco confiável.`, id_referencia: p.id_medicamento });
     }
@@ -121,7 +126,7 @@ export function reconstruirEstoque(
     }
     return {
       ...p,
-      consumo_medio_diario: arred2(saidas / janela),
+      consumo_medio_diario: Math.max(0, diasComMovimento > 0 ? Math.round(saidas / diasComMovimento) : 0),
       lotes: [...lotes.values()]
         .filter((l) => l.id_medicamento === p.id_medicamento && l.saldo > 0)
         .map((l) => ({ codigo_lote: l.codigo_lote, quantidade: l.saldo, validade: l.validade })),

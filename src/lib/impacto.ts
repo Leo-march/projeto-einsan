@@ -1,4 +1,5 @@
 import type { ImpactoItem, ItemEstoque, RecomendacaoCompra } from "@/types/dominio";
+import { saidasPorDia } from "@/lib/projecao-inteira";
 
 const MS_DIA = 86_400_000;
 const JANELA_SIMULACAO_DIAS = 30;
@@ -28,9 +29,11 @@ function simularCenario(
   let somaCapitalParado = 0;
   const pontos: ImpactoItem["simulacao_30_dias"]["pontos_diarios"] = [];
 
+  const consumoPorDia = saidasPorDia(consumoDiario, JANELA_SIMULACAO_DIAS);
+
   for (let dia = 1; dia <= JANELA_SIMULACAO_DIAS; dia += 1) {
     if (cenarioComCompra && dia === diaEntrega) saldo += quantidadeRecebida;
-    const consumo = Math.max(0, consumoDiario);
+    const consumo = Math.max(0, consumoPorDia[dia - 1] ?? 0);
     const atendido = Math.min(saldo, consumo);
     const falta = Math.max(0, consumo - atendido);
     saldo = Math.max(0, saldo - atendido);

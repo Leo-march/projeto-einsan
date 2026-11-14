@@ -27,6 +27,14 @@ function total(valores: Movimentacao[]): number {
   return valores.reduce((soma, item) => soma + item.quantidade, 0);
 }
 
+function diasAtivos(movimentos: Movimentacao[]): number {
+  return new Set(
+    movimentos
+      .filter((movimento) => !Number.isNaN(Date.parse(movimento.timestamp)))
+      .map((movimento) => new Date(Date.parse(movimento.timestamp)).toISOString().slice(0, 10))
+  ).size;
+}
+
 export function calcularConsumoEQualidade(
   medicamentoId: string,
   cofreId: string,
@@ -58,8 +66,10 @@ export function calcularConsumoEQualidade(
     : Math.max(0, Math.floor((referenciaMs - Math.min(...eventosAntigos)) / MS_DIA));
   const consumo30Regular = total(regulares30);
   const consumo7Regular = total(regulares7);
-  const taxa30 = consumo30Regular / JANELA_CONSUMO_LONGA_DIAS;
-  const taxa7 = consumo7Regular / JANELA_CONSUMO_CURTA_DIAS;
+  const diasAtivos30 = diasAtivos(regulares30);
+  const diasAtivos7 = diasAtivos(regulares7);
+  const taxa30 = diasAtivos30 > 0 ? consumo30Regular / diasAtivos30 : 0;
+  const taxa7 = diasAtivos7 > 0 ? consumo7Regular / diasAtivos7 : 0;
   const usouFallback = regulares30.length < MINIMO_SAIDAS_PARA_HISTORICO;
   let tendencia: ConsumoHistorico["tendencia"] = "SEM_HISTORICO";
   let consumoUsado = consumoFallback;
@@ -76,6 +86,8 @@ export function calcularConsumoEQualidade(
       consumoUsado = taxa30;
     }
   }
+
+  consumoUsado = Math.max(0, Number.isFinite(consumoUsado) ? Math.round(consumoUsado) : 0);
 
   const percentualIdentificado = saidas30.length === 0
     ? 0
