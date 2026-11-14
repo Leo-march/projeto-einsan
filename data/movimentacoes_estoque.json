@@ -898,13 +898,6 @@
     "origem_registro": "MANUAL"
   },
   {
-    "id_movimentacao": "MOV-1794675916738",
-    "cofre_id": "COFRE-01",
-    "timestamp": "2026-11-14T17:05:16.738Z",
-    "tipo": "SAIDA_DISPENSACAO",
-    "id_medicamento": "MED-003",
-    "codigo_lote": "LOT-STE-2209",
-    "quantidade": 10,
     "id_movimentacao": "MOV-1794675638067",
     "cofre_id": "COFRE-01",
     "timestamp": "2026-11-14T18:05:00.000Z",
@@ -960,6 +953,30 @@
     "id_recebimento": "MOV-1794677284789",
     "quantidade": 11,
     "validade": "2026-11-14",
+    "origem_registro": "MANUAL"
+  },
+  {
+    "id_movimentacao": "MOV-1794677670933",
+    "cofre_id": "COFRE-01",
+    "timestamp": "2026-11-14T18:05:00.000Z",
+    "tipo": "ENTRADA_COMPRA",
+    "id_medicamento": "MED-002",
+    "codigo_lote": "1002",
+    "id_recebimento": "MOV-1794677670933",
+    "quantidade": 100,
+    "validade": "2026-11-14",
+    "origem_registro": "MANUAL"
+  },
+  {
+    "id_movimentacao": "MOV-1794677733106",
+    "cofre_id": "COFRE-01",
+    "timestamp": "2026-11-14T18:05:00.000Z",
+    "tipo": "ENTRADA_COMPRA",
+    "id_medicamento": "MED-002",
+    "codigo_lote": "1002",
+    "id_recebimento": "MOV-1794677733106",
+    "quantidade": 20,
+    "validade": "2027-02-10",
     "origem_registro": "MANUAL"
   }
 ]
