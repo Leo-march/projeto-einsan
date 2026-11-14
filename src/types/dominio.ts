@@ -34,9 +34,13 @@ export interface LogHardware {
 
 export interface LoteEstoque {
   codigo_lote: string;
+  /** Movimento de entrada que originou este saldo do lote. */
+  id_recebimento: string;
   quantidade: number;
   /** YYYY-MM-DD */
   validade: string;
+  /** ISO 8601: quando este recebimento entrou no cofre. */
+  primeira_entrada: string;
 }
 
 export interface ItemEstoque {
@@ -381,9 +385,11 @@ export interface MovimentacaoEstoque {
   tipo: TipoMovimentacao;
   id_medicamento: string;
   codigo_lote: string;
+  /** ID do recebimento consumido/ajustado; em entradas, identifica o próprio recebimento. */
+  id_recebimento?: string;
   /** Sempre positiva, exceto em AJUSTE_INVENTARIO (negativa = sobra a menos no físico) */
   quantidade: number;
-  /** Obrigatória na primeira entrada de um lote (YYYY-MM-DD) */
+  /** Obrigatória em cada entrada (YYYY-MM-DD) */
   validade?: string;
   /** Fornecedor ou unidade de origem/destino */
   contraparte?: string;
@@ -445,6 +451,8 @@ export interface VisaoEstoque {
     consumo_medio_diario: number;
     lotes: {
       codigo_lote: string;
+      id_recebimento: string;
+      primeira_entrada: string;
       quantidade: number;
       validade: string;
       dias_para_vencer: number;

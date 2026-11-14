@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { analisarRiscoTermico, executarAnalise } from "@/lib/analise";
 import { carregarDados, resolverReferencia, salvarMovimentacoes } from "@/lib/dados";
-import { listarMovimentacoes, reconstruirEstoque, validarNovaMovimentacao } from "@/lib/estoque";
+import { listarMovimentacoes, loteInvalidadoTermicamente, reconstruirEstoque, validarNovaMovimentacao } from "@/lib/estoque";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -44,19 +44,31 @@ export async function POST(request: Request) {
     const v = validarNovaMovimentacao(body, d.parametros, estoqueTotal, agora);
     if (!v.ok) return NextResponse.json({ erro: "Movimentação inválida.", detalhes: v.erros }, { status: 400 });
 
-    const mov = v.movimentacao;
+    // O "presente" do sistema é o evento mais recente (logs ou movimentações), o mesmo critério de
+    // resolverReferencia. Sem timestamp informado, a movimentação nunca é datada antes de eventos já
+    // conhecidos; do contrário ela cairia "antes" de uma excursão e seria tratada como exposta a ela.
+    const tsInformado = typeof (body as { timestamp?: unknown } | null)?.timestamp === "string";
+    const presente = resolverReferencia(null, d.logs, d.movimentacoes);
+    const mov =
+      tsInformado || presente === null || presente <= Date.parse(v.movimentacao.timestamp)
+        ? v.movimentacao
+        : { ...v.movimentacao, timestamp: new Date(presente).toISOString() };
 
     // Trava de segurança: não dispensa lote invalidado por temperatura nem vencido.
     if (mov.tipo === "SAIDA_DISPENSACAO") {
       const ref = resolverReferencia(null, d.logs, d.movimentacoes) ?? agora.getTime();
       const { avaliacoes } = analisarRiscoTermico(d.logs, d.bulas, estoqueTotal, ref);
-      if (avaliacoes.find((a) => a.id_medicamento === mov.id_medicamento)?.status === "LOTES_INVALIDADOS") {
+      const lote = estoqueTotal.itens.find((i) => i.id_medicamento === mov.id_medicamento)?.lotes.find(
+        (l) => l.codigo_lote === mov.codigo_lote && l.id_recebimento === mov.id_recebimento
+      );
+      const avaliacao = avaliacoes.find((a) => a.id_medicamento === mov.id_medicamento);
+      if (lote && loteInvalidadoTermicamente(avaliacao, lote)) {
         return NextResponse.json(
           { erro: "Dispensação bloqueada: lote invalidado por excursão térmica. Registre como SAIDA_DESCARTE." },
           { status: 422 }
         );
       }
-      const validade = estoqueTotal.itens.find((i) => i.id_medicamento === mov.id_medicamento)?.lotes.find((l) => l.codigo_lote === mov.codigo_lote)?.validade;
+      const validade = lote?.validade;
       if (validade && Date.parse(`${validade}T23:59:59-03:00`) < Date.parse(mov.timestamp)) {
         return NextResponse.json({ erro: "Dispensação bloqueada: lote vencido. Registre como SAIDA_DESCARTE." }, { status: 422 });
       }
