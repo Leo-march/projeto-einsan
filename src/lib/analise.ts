@@ -9,7 +9,10 @@ import type {
   RecomendacaoCompra,
   Severidade,
   AcaoCompra,
+  MovimentacaoEstoque,
+  ParametrosCofre,
 } from "@/types/dominio";
+import { conciliarScanner, reconstruirEstoque } from "@/lib/estoque";
 
 // ---------- Parâmetros do motor (ajustáveis na PoC) ----------
 const MS_MIN = 60_000;
@@ -121,9 +124,12 @@ export function analisarRiscoTermico(
 }
 
 // ============================================================
-// Regra 2: Movimentação Não Identificada
+// Regra 2: Movimentação Não Identificada (conciliada com o livro de estoque)
 // ============================================================
-export function detectarMovimentacaoNaoIdentificada(logs: LogHardware[]) {
+/** Saída lançada manualmente até X min após o fechamento "regulariza" o ciclo */
+const TOLERANCIA_REGULARIZACAO_MS = 30 * MS_MIN;
+
+export function detectarMovimentacaoNaoIdentificada(logs: LogHardware[], movs: MovimentacaoEstoque[] = []) {
   const ordenados = [...logs].sort((a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp));
   const alertas: AlertaMovimentacaoNaoIdentificada[] = [];
 
@@ -140,7 +146,13 @@ export function detectarMovimentacaoNaoIdentificada(logs: LogHardware[]) {
     } else if (ev.tipo === "PORTA_FECHADA" && aberta) {
       ciclos++;
       if (scans === 0) {
-        const duracao = Math.round((Date.parse(ev.timestamp) - Date.parse(aberta.timestamp)) / 1000);
+        const abertaMs = Date.parse(aberta.timestamp);
+        const fechadaMs = Date.parse(ev.timestamp);
+        const duracao = Math.round((fechadaMs - abertaMs) / 1000);
+        const regularizada = movs.some((m) => {
+          const t = Date.parse(m.timestamp);
+          return m.origem_registro === "MANUAL" && m.tipo.startsWith("SAIDA") && t >= abertaMs && t <= fechadaMs + TOLERANCIA_REGULARIZACAO_MS;
+        });
         alertas.push({
           tipo: "DIVERGENCIA_ESTOQUE",
           severidade: "ALTA",
@@ -148,9 +160,11 @@ export function detectarMovimentacaoNaoIdentificada(logs: LogHardware[]) {
           porta_fechada_em: ev.timestamp,
           duracao_segundos: duracao,
           usuario_biometria_id: aberta.usuario_biometria_id ?? null,
-          mensagem:
-            "Divergência de Estoque / Retirada não identificada: a porta foi aberta " +
-            `e fechada (${Math.round(duracao / 60)} min) sem nenhuma leitura do scanner.`,
+          regularizada_por_lancamento_manual: regularizada,
+          mensagem: regularizada
+            ? "Porta aberta e fechada sem leitura do scanner, mas há saída lançada manualmente no período. Conferir o lote informado."
+            : "Divergência de Estoque / Retirada não identificada: a porta foi aberta " +
+              `e fechada (${Math.round(duracao / 60)} min) sem nenhuma leitura do scanner e sem baixa no livro de estoque.`,
         });
       }
       aberta = null;
@@ -286,12 +300,18 @@ export function gerarRecomendacoes(
 export function executarAnalise(
   bulas: Bula[],
   logs: LogHardware[],
-  estoque: EstoqueCofre,
+  movs: MovimentacaoEstoque[],
+  parametros: ParametrosCofre,
   refMs: number
 ): AnaliseResponse {
+  // O estoque é reconstruído do livro de movimentações (entradas, saídas, transferências).
+  const { estoque, qualidade } = reconstruirEstoque(movs, parametros, refMs);
   const termico = analisarRiscoTermico(logs, bulas, estoque, refMs);
-  const mov = detectarMovimentacaoNaoIdentificada(logs);
-  const recomendacoes = gerarRecomendacoes(bulas, estoque, termico.avaliacoes, mov.alertas.length, refMs);
+  const mov = detectarMovimentacaoNaoIdentificada(logs, movs);
+  // Só divergências NÃO regularizadas reduzem o estoque útil.
+  const divergenciasAbertas = mov.alertas.filter((a) => !a.regularizada_por_lancamento_manual).length;
+  const recomendacoes = gerarRecomendacoes(bulas, estoque, termico.avaliacoes, divergenciasAbertas, refMs);
+  qualidade.avisos.push(...conciliarScanner(logs, movs));
 
   const lotesInvalidados = soma(termico.alertas.map((a) => a.lotes_invalidados.length));
   const unidadesInvalidadas = soma(termico.alertas.map((a) => a.unidades_invalidadas));
@@ -306,7 +326,7 @@ export function executarAnalise(
       total_eventos_analisados: logs.length,
       ciclos_porta_analisados: mov.ciclos,
       porta_atualmente_aberta: mov.portaAbertaAgora,
-      versao_regras: "poc-1.0",
+      versao_regras: "poc-1.1",
     },
     resumo: {
       status_geral: termico.alertas.length > 0 ? "CRITICO" : totalAlertas > 0 || comCompra.length > 0 ? "ATENCAO" : "NORMAL",
@@ -323,5 +343,6 @@ export function executarAnalise(
     },
     avaliacoes_termicas: termico.avaliacoes,
     recomendacoes_compra: recomendacoes,
+    qualidade_dados: qualidade,
   };
 }
