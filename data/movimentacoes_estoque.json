@@ -943,5 +943,19 @@
     "usuario_id": "SFDFSF",
     "origem_registro": "MANUAL",
     "observacao": "SFSFSFSF"
+  },
+  {
+    "id_movimentacao": "MOV-1794680867405",
+    "cofre_id": "COFRE-01",
+    "timestamp": "2026-11-14T18:27:47.405Z",
+    "tipo": "ENTRADA_COMPRA",
+    "id_medicamento": "MED-001",
+    "codigo_lote": "LOT-HUM-2301",
+    "id_recebimento": "MOV-1794680867405",
+    "quantidade": 50,
+    "validade": "2027-07-07",
+    "usuario_id": "Leonardo",
+    "origem_registro": "MANUAL",
+    "observacao": "Chegou um lote novo"
   }
 ]
