@@ -1,0 +1,17 @@
+.badge { display: inline-flex; min-height: 24px; align-items: center; gap: 6px; padding: 3px 8px; border: 1px solid transparent; border-radius: 3px; font-size: 10px; font-weight: 750; line-height: 1.2; }
+.badge > span { font-size: 10px; }
+.critica { color: #842d2c; border-color: #e8b6b2; background: #fae7e4; }
+.alta { color: #843e18; border-color: #ebc1a8; background: #fbecdf; }
+.media { color: #75530b; border-color: #e5d198; background: #f7f0d9; }
+.baixa { color: #53636e; border-color: #cbd4da; background: #edf1f3; }
+.ok { color: #1d5b43; border-color: #b7d4c3; background: #e7f2eb; }
+.neutro { color: #4a5b61; border-color: #d3dcdb; background: #edf1ef; }
+
+@media (prefers-color-scheme: dark) {
+  .critica { color: #ffc4bd; border-color: #75413e; background: #482b2c; }
+  .alta { color: #ffd0a9; border-color: #70472f; background: #422f25; }
+  .media { color: #f0d98f; border-color: #68572b; background: #3b3423; }
+  .baixa { color: #c7d4dc; border-color: #45535a; background: #29353b; }
+  .ok { color: #a9dec0; border-color: #315746; background: #203d31; }
+  .neutro { color: #c4d2d1; border-color: #465452; background: #2a3735; }
+}
