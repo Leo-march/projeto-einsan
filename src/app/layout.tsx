@@ -5,7 +5,7 @@ import { StoreProvider } from '@/context/Store';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 
 const font = IBM_Plex_Sans({ subsets: ['latin'], weight: ['400', '500', '600', '700'] });
-export const metadata: Metadata = { title: 'Einsan | Inteligência de estoque refrigerado', description: 'Plataforma de previsão de demanda e compras de medicamentos de alto custo.' };
+export const metadata: Metadata = { title: 'San | Inteligência de estoque refrigerado', description: 'Plataforma de previsão de demanda e compras de medicamentos de alto custo.' };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
