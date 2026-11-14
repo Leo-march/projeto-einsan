@@ -40,3 +40,30 @@ describe("reconstruirRastreabilidade", () => {
     expect(resultado.margem_incerteza_unidades).toBe(2);
   });
 });
+describe("reconstruirRastreabilidade com código de lote repetido", () => {
+  it("compara o saldo por código e não inventa divergência entre recebimentos", () => {
+    const estoqueRepetido: EstoqueCofre = {
+      cofre_id: "COFRE-01",
+      itens: [{
+        id_medicamento: "MED-TESTE",
+        custo_unitario_brl: 100,
+        consumo_medio_diario: 1,
+        prazo_reposicao_dias: 2,
+        estoque_seguranca_dias: 1,
+        lotes: [
+          { codigo_lote: "LOT-1", id_recebimento: "REC-1", primeira_entrada: "2026-10-01T10:00:00Z", quantidade: 3, validade: "2027-01-01" },
+          { codigo_lote: "LOT-1", id_recebimento: "REC-2", primeira_entrada: "2026-10-02T10:00:00Z", quantidade: 4, validade: "2027-01-01" },
+        ],
+      }],
+    };
+    const movs: Movimentacao[] = [
+      { id_movimento: "M-1", timestamp: "2026-10-01T10:00:00Z", cofre_id: "COFRE-01", tipo: "ENTRADA", id_medicamento: "MED-TESTE", codigo_lote: "LOT-1", quantidade: 5, origem_registro: "SCANNER", usuario_biometria_id: "U" },
+      { id_movimento: "M-2", timestamp: "2026-10-02T10:00:00Z", cofre_id: "COFRE-01", tipo: "ENTRADA", id_medicamento: "MED-TESTE", codigo_lote: "LOT-1", quantidade: 4, origem_registro: "SCANNER", usuario_biometria_id: "U" },
+      { id_movimento: "M-3", timestamp: "2026-10-03T10:00:00Z", cofre_id: "COFRE-01", tipo: "DISPENSACAO", id_medicamento: "MED-TESTE", codigo_lote: "LOT-1", quantidade: 2, origem_registro: "SCANNER", usuario_biometria_id: "U" },
+    ];
+    const resultado = reconstruirRastreabilidade(estoqueRepetido, movs, [], Date.parse("2026-11-14T12:00:00Z"), 1)["MED-TESTE"];
+
+    expect(resultado.divergencias_lote_abertas).toBe(0);
+    expect(resultado.margem_incerteza_unidades).toBe(0);
+  });
+});

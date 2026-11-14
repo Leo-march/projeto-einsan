@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -8,6 +7,7 @@ import { EstadoApi } from '@/components/AvisoApi';
 import { brl } from '@/utils/calculations';
 import { fornecedores, type FornecedorLivro } from '@/utils/derivados';
 import { ACAO, dataApiBR, urgLabel, urgTone } from '@/utils/apiHelpers';
+import { SugestaoCompra } from '@/components/SugestaoCompra';
 import { ApiError, registrarMovimentacao } from '@/services/api';
 import type { NovaMovimentacao, OrigemApi } from '@/types/api';
 
@@ -86,6 +86,7 @@ export default function Compras() {
       <EstadoApi ok={!!analise} />
       {analise && <div className="note">Recomendações calculadas pela API do Cofre Inteligente (regras {analise.meta.versao_regras}), já ordenadas por urgência. Aprovar apenas registra sua decisão; o estoque muda somente após o recebimento ser lançado como entrada com lote e validade.</div>}
       {analise && !itens.length && !carregandoApi && <Card>Nenhuma compra recomendada no momento.</Card>}
+      {analise && <SugestaoCompra analise={analise} estoque={estoque} movs={movs} itens={itens} />}
       <div className="grid g2">
         {itens.map((r) => {
           const st = recStatus[r.id_medicamento];
@@ -120,6 +121,7 @@ export default function Compras() {
                     ['Prazo de reposição', `${r.prazo_reposicao_dias} dias`],
                     ['Quantidade sugerida', r.quantidade_sugerida],
                     ['Custo estimado', brl(r.custo_estimado_brl)],
+                    ...(r.fornecedor_recomendado ? [['Fornecedor sugerido', `${r.fornecedor_recomendado.nome} (${r.fornecedor_recomendado.prazo_entrega_dias} dia(s), ${r.fornecedor_recomendado.confiabilidade_entrega_pct}% no prazo)`] as [string, string]] : []),
                   ] as [string, string | number][]
                 ).map(([k, v]) => (
                   <div key={k}>

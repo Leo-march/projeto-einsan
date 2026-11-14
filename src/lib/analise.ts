@@ -17,6 +17,7 @@ import type {
 import { conciliarScanner, loteInvalidadoTermicamente, reconstruirEstoque } from "@/lib/estoque";
 import { calcularConsumoEQualidade } from "@/lib/consumo";
 import { escolherFornecedor } from "@/lib/fornecedores";
+import { DADOS_FORNECEDORES } from "@/lib/catalogo-fornecedores";
 import { calcularImpacto } from "@/lib/impacto";
 import { diaDaRuptura } from "@/lib/projecao-inteira";
 import { reconstruirRastreabilidade } from "@/lib/rastreabilidade";
@@ -477,7 +478,7 @@ export function gerarRecomendacoes(
 
     const enriquecida: RecomendacaoCompra = {
       ...recomendacao,
-      // Sem fornecedor (não há cadastro de fornecedores na API), vale a regra do guia: quantidade × custo unitário.
+      // Com fornecedor escolhido vale o custo da oferta; sem ele, a regra do guia: quantidade × custo unitário.
       custo_estimado_brl: selecao.fornecedor_recomendado ? selecao.custo_estimado_brl : recomendacao.quantidade_sugerida * item.custo_unitario_brl,
       preco_referencia_brl: referencia?.preco_referencia_brl ?? null,
       fonte_preco_referencia: referencia?.fonte ?? null,
@@ -502,6 +503,36 @@ export function gerarRecomendacoes(
 // ============================================================
 // Orquestração
 // ============================================================
+/**
+ * Converte o livro de movimentações atual para o formato que os motores de consumo e de
+ * rastreabilidade esperam. Descartes viram ajuste negativo para não contarem como consumo.
+ */
+export function paraMovimentacaoLegada(m: MovimentacaoEstoque): Movimentacao {
+  const base = {
+    id_movimento: m.id_movimentacao,
+    timestamp: m.timestamp,
+    cofre_id: m.cofre_id,
+    id_medicamento: m.id_medicamento,
+    codigo_lote: m.codigo_lote ?? null,
+    origem_registro: m.origem_registro === "SCANNER" ? ("SCANNER" as const) : ("MANUAL" as const),
+    usuario_biometria_id: m.usuario_id ?? "",
+  };
+  switch (m.tipo) {
+    case "ENTRADA_COMPRA":
+      return { ...base, tipo: "ENTRADA", quantidade: Math.abs(m.quantidade) };
+    case "SAIDA_DISPENSACAO":
+      return { ...base, tipo: "DISPENSACAO", quantidade: Math.abs(m.quantidade) };
+    case "SAIDA_DESCARTE":
+      return { ...base, tipo: "AJUSTE", quantidade: -Math.abs(m.quantidade) };
+    case "ENTRADA_TRANSFERENCIA":
+      return { ...base, tipo: "TRANSFERENCIA", quantidade: Math.abs(m.quantidade), sentido_transferencia: "ENTRADA", cofre_par: m.contraparte };
+    case "SAIDA_TRANSFERENCIA":
+      return { ...base, tipo: "TRANSFERENCIA", quantidade: Math.abs(m.quantidade), sentido_transferencia: "SAIDA", cofre_par: m.contraparte };
+    default:
+      return { ...base, tipo: "AJUSTE", quantidade: m.quantidade };
+  }
+}
+
 export function executarAnalise(
   bulas: Bula[],
   logs: LogHardware[],
@@ -515,7 +546,7 @@ export function executarAnalise(
   const mov = detectarMovimentacaoNaoIdentificada(logs, movs);
   // Só divergências NÃO regularizadas reduzem o estoque útil.
   const divergenciasAbertas = mov.alertas.filter((a) => !a.regularizada_por_lancamento_manual).length;
-  const recomendacoes = gerarRecomendacoes(bulas, estoque, termico.avaliacoes, divergenciasAbertas, refMs);
+  const recomendacoes = gerarRecomendacoes(bulas, estoque, termico.avaliacoes, divergenciasAbertas, refMs, DADOS_FORNECEDORES, movs.map(paraMovimentacaoLegada));
   qualidade.avisos.push(...conciliarScanner(logs, movs));
 
   const lotesInvalidados = soma(termico.alertas.map((a) => a.lotes_invalidados.length));
