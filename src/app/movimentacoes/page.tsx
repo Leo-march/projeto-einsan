@@ -1,4 +1,6 @@
+
 'use client';
+
 import { useCallback, useEffect, useState } from 'react';
 import { Plus } from 'lucide-react';
 import { useStore } from '@/context/Store';
@@ -7,12 +9,26 @@ import { buscarMovimentacoes, registrarMovimentacao, ApiError } from '@/services
 import { dataHoraBR, loteLabel, qtdComSinal, tipoMovLabel, tipoMovTone } from '@/utils/apiHelpers';
 import type { MovimentacaoApi, NovaMovimentacao, OrigemApi, TipoMovApi } from '@/types/api';
 
+// Todos os tipos continuam disponíveis no filtro da tabela.
 const TIPOS = Object.keys(tipoMovLabel) as TipoMovApi[];
-const ORIGENS: OrigemApi[] = ['MANUAL', 'SCANNER', 'INTEGRACAO_NF'];
-const vazio = (id: string): NovaMovimentacao => ({ tipo: 'ENTRADA_COMPRA', id_medicamento: id, codigo_lote: '', quantidade: 1, origem_registro: 'MANUAL' });
+
+// Tipos permitidos somente para registrar novas movimentações.
+const TIPOS_FORM = TIPOS.filter(
+  (t) => t !== 'SAIDA_TRANSFERENCIA' && t !== 'AJUSTE_INVENTARIO'
+);
+
+// Novas movimentações são registradas automaticamente como MANUAL.
+const vazio = (id: string): NovaMovimentacao => ({
+  tipo: 'ENTRADA_COMPRA',
+  id_medicamento: id,
+  codigo_lote: '',
+  quantidade: 1,
+  origem_registro: 'MANUAL',
+});
 
 export default function Movimentacoes() {
   const { estoque, recarregarApi, toast } = useStore();
+
   const itens = estoque?.itens ?? [];
   const nomeDe = (id: string) => itens.find((i) => i.id_medicamento === id)?.nome ?? id;
   const lotesDoMed = (id: string) => itens.find((i) => i.id_medicamento === id)?.lotes ?? [];
@@ -20,58 +36,219 @@ export default function Movimentacoes() {
   const [rows, setRows] = useState<MovimentacaoApi[]>([]), [carr, setCarr] = useState(true), [erro, setErro] = useState('');
   const [form, setForm] = useState<NovaMovimentacao | null>(null), [enviando, setEnviando] = useState(false), [erroForm, setErroForm] = useState('');
 
-  useEffect(() => { const m = new URLSearchParams(location.search).get('m'); if (m) setMed(m); }, []);
+  // Recupera o medicamento informado pela URL, quando existir.
+  useEffect(() => {
+    const m = new URLSearchParams(location.search).get('m');
+    if (m) setMed(m);
+  }, []);
 
-  // Tipo e medicamento são filtrados no servidor; o intervalo de datas (que a API não tem) é aplicado aqui.
+  // Tipo e medicamento são filtrados no servidor.
+  // O intervalo de datas é aplicado localmente.
   const carregar = useCallback(async () => {
     setCarr(true);
+
     try {
-      const r = await buscarMovimentacoes({ tipo: tipo === 'Todos' ? undefined : tipo, id_medicamento: med === 'Todos' ? undefined : med, limite: 500 });
-      setRows(r.movimentacoes); setErro('');
-    } catch (e) { setErro((e as Error).message); } finally { setCarr(false); }
+      const r = await buscarMovimentacoes({
+        tipo: tipo === 'Todos' ? undefined : tipo,
+        id_medicamento: med === 'Todos' ? undefined : med,
+        limite: 500,
+      });
+
+      setRows(r.movimentacoes);
+      setErro('');
+    } catch (e) {
+      setErro((e as Error).message);
+    } finally {
+      setCarr(false);
+    }
   }, [tipo, med]);
-  useEffect(() => { void carregar(); }, [carregar]);
 
-  const dia = (iso: string) => new Date(iso).toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });
-  const filtradas = rows.filter((m) => (!de || dia(m.timestamp) >= de) && (!ate || dia(m.timestamp) <= ate));
+  useEffect(() => {
+    void carregar();
+  }, [carregar]);
 
+  // Converte a data para o padrão brasileiro.
+  const dia = (iso: string) =>
+    new Date(iso).toLocaleDateString('sv-SE', {
+      timeZone: 'America/Sao_Paulo',
+    });
+
+  // Aplica os filtros de data.
+  const filtradas = rows.filter(
+    (m) =>
+      (!de || dia(m.timestamp) >= de) &&
+      (!ate || dia(m.timestamp) <= ate)
+  );
+
+  // Registra uma nova movimentação.
   const enviar = async () => {
-    if (!form || enviando) return; // evita duplo clique: o POST não é idempotente
-    setEnviando(true); setErroForm('');
+    if (!form || enviando) return;
+
+    // Quem fez e o motivo são campos obrigatórios.
+    if (!form.usuario_id?.trim() || !form.observacao?.trim()) {
+      setErroForm('Informe quem fez a movimentação e o motivo.');
+      return;
+    }
+
+    setEnviando(true);
+    setErroForm('');
+
     try {
-      const body: NovaMovimentacao = { ...form, validade: form.validade || undefined, documento: form.documento || undefined, contraparte: form.contraparte || undefined, usuario_id: form.usuario_id || undefined };
+      const body: NovaMovimentacao = {
+        ...form,
+        validade: form.validade || undefined,
+        usuario_id: form.usuario_id?.trim(),
+        observacao: form.observacao?.trim(),
+      };
+
       await registrarMovimentacao(body);
-      setForm(null); toast('Movimentação registrada');
-      await Promise.all([recarregarApi(), carregar()]); // só atualiza a tela depois do 201
+
+      setForm(null);
+      toast('Movimentação registrada');
+
+      // Atualiza os dados somente depois da confirmação da API.
+      await Promise.all([recarregarApi(), carregar()]);
     } catch (e) {
       const a = e as ApiError;
-      setErroForm([a.message, ...(a.detalhes ?? [])].join(' ')); // 400 traz detalhes[]; 422 orienta o descarte
-    } finally { setEnviando(false); }
+
+      setErroForm(
+        [a.message, ...(a.detalhes ?? [])].join(' ')
+      );
+    } finally {
+      setEnviando(false);
+    }
   };
 
+  // Colunas da tabela de movimentações.
   const cols: Col<MovimentacaoApi>[] = [
-    { label: 'Data e horário', val: (m) => m.timestamp, render: (m) => dataHoraBR(m.timestamp) },
-    { label: 'Medicamento', val: (m) => nomeDe(m.id_medicamento), render: (m) => <b>{nomeDe(m.id_medicamento)}</b> },
-    { label: 'Tipo', val: (m) => m.tipo, render: (m) => <Badge tone={tipoMovTone[m.tipo]}>{tipoMovLabel[m.tipo]}</Badge> },
-    { label: 'Quantidade', val: (m) => m.quantidade, render: (m) => qtdComSinal(m.tipo, m.quantidade) },
-    { label: 'Lote', val: (m) => m.codigo_lote }, { label: 'Saldo do lote', val: (m) => m.saldo_lote_apos },
-    { label: 'Origem', val: (m) => m.origem_registro }, { label: 'Responsável', val: (m) => m.usuario_id ?? '-' },
+    {
+      label: 'Data e horário',
+      val: (m) => m.timestamp,
+      render: (m) => dataHoraBR(m.timestamp),
+    },
+    {
+      label: 'Medicamento',
+      val: (m) => nomeDe(m.id_medicamento),
+      render: (m) => <b>{nomeDe(m.id_medicamento)}</b>,
+    },
+    {
+      label: 'Tipo',
+      val: (m) => m.tipo,
+      render: (m) => (
+        <Badge tone={tipoMovTone[m.tipo]}>
+          {tipoMovLabel[m.tipo]}
+        </Badge>
+      ),
+    },
+    {
+      label: 'Quantidade',
+      val: (m) => m.quantidade,
+      render: (m) => qtdComSinal(m.tipo, m.quantidade),
+    },
+    {
+      label: 'Lote',
+      val: (m) => m.codigo_lote,
+    },
+    {
+      label: 'Saldo do lote',
+      val: (m) => m.saldo_lote_apos,
+    },
+    {
+      label: 'Responsável',
+      val: (m) => m.usuario_id ?? '-',
+    },
+    {
+      label: 'Motivo',
+      val: (m) => m.observacao ?? '-',
+    },
   ];
-  const set = <K extends keyof NovaMovimentacao>(k: K, v: NovaMovimentacao[K]) => setForm((f) => (f ? { ...f, [k]: v } : f));
+
+  // Atualiza os campos do formulário.
+  const set = <K extends keyof NovaMovimentacao>(
+    k: K,
+    v: NovaMovimentacao[K]
+  ) =>
+    setForm((f) => (f ? { ...f, [k]: v } : f));
 
   return (
     <Card>
-      {erro && <div className="note">Não foi possível carregar as movimentações ({erro}). <button className="btn" onClick={() => void carregar()}>Tentar novamente</button></div>}
+      {erro && (
+        <div className="note">
+          Não foi possível carregar as movimentações ({erro}).{' '}
+          <button
+            className="btn"
+            onClick={() => void carregar()}
+          >
+            Tentar novamente
+          </button>
+        </div>
+      )}
+
       <div className="bar">
-        <Sel label="Tipo" value={tipo} onChange={setTipo} opts={['Todos', ...TIPOS]} />
-        <Sel label="Medicamento" value={med} onChange={setMed} opts={['Todos', ...itens.map((i) => i.id_medicamento)]} />
-        <label>De <input type="date" value={de} onChange={(e) => setDe(e.target.value)} /></label>
-        <label>Até <input type="date" value={ate} onChange={(e) => setAte(e.target.value)} /></label>
-        <button className="btn pri push" disabled={!itens.length} onClick={() => { setErroForm(''); setForm(vazio(itens[0]?.id_medicamento ?? '')); }}><Plus size={16} style={{ verticalAlign: -3 }} /> Registrar movimentação</button>
+        {/* O filtro mantém todos os tipos de movimentação. */}
+        <Sel
+          label="Tipo"
+          value={tipo}
+          onChange={setTipo}
+          opts={['Todos', ...TIPOS]}
+        />
+
+        <Sel
+          label="Medicamento"
+          value={med}
+          onChange={setMed}
+          opts={[
+            'Todos',
+            ...itens.map((i) => i.id_medicamento),
+          ]}
+        />
+
+        <label>
+          De
+          <input
+            type="date"
+            value={de}
+            onChange={(e) => setDe(e.target.value)}
+          />
+        </label>
+
+        <label>
+          Até
+          <input
+            type="date"
+            value={ate}
+            onChange={(e) => setAte(e.target.value)}
+          />
+        </label>
+
+        <button
+          className="btn pri push"
+          disabled={!itens.length}
+          onClick={() => {
+            setErroForm('');
+            setForm(vazio(itens[0]?.id_medicamento ?? ''));
+          }}
+        >
+          <Plus size={16} style={{ verticalAlign: -3 }} /> Registrar movimentação
+        </button>
       </div>
-      {carr && !rows.length ? <p className="j">Carregando…</p> : <DataTable rows={filtradas} cols={cols} pageSize={10} />}
+
+      {carr && !rows.length ? (
+        <p className="j">Carregando…</p>
+      ) : (
+        <DataTable
+          rows={filtradas}
+          cols={cols}
+          pageSize={10}
+        />
+      )}
+
       {form && (
-        <Modal title="Registrar movimentação" onClose={() => !enviando && setForm(null)} wide>
+        <Modal
+          title="Registrar movimentação"
+          onClose={() => !enviando && setForm(null)}
+          wide
+        >
           <div className="form">
             <label>Tipo<select value={form.tipo} onChange={(e) => setForm((f) => f ? { ...f, tipo: e.target.value as TipoMovApi, id_recebimento: undefined } : f)}>{TIPOS.map((t) => <option key={t} value={t}>{tipoMovLabel[t]}</option>)}</select></label>
             <label>Medicamento<select value={form.id_medicamento} onChange={(e) => setForm((f) => f ? { ...f, id_medicamento: e.target.value, codigo_lote: '', id_recebimento: undefined } : f)}>{itens.map((i) => <option key={i.id_medicamento} value={i.id_medicamento}>{i.nome}</option>)}</select></label>
