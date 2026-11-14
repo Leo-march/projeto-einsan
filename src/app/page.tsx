@@ -50,7 +50,7 @@ export default function Dashboard() {
             <Kpi icon={<AlertOctagon size={20} />} label="Situação crítica" value={String(crit)} tone="crit" note="Cobertura ≤ prazo de reposição" />
           </div>
           <div className="grid g2">
-            <Card title="Inteligência Einsan" className="ai">
+            <Card title="Inteligência San" className="ai">
               {recs.slice(0, 2).map((r) => (
                 <div key={r.id_medicamento} style={{ marginBottom: 14 }}>
                   <h4>{r.nome} <Badge tone={urgTone(r.urgencia)}>{ACAO[r.acao] ?? r.acao}</Badge></h4>

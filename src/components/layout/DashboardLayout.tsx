@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, type ReactNode } from 'react';
@@ -17,11 +16,12 @@ import {
   Settings,
   Bell,
   Menu,
-  Snowflake,
 } from 'lucide-react';
 import { useStore } from '@/context/Store';
 import { Badge, SearchBox } from '@/components/ui';
 import { alertasDaApi } from '@/utils/apiHelpers';
+import { SanAssistente } from '@/components/SanAssistente';
+import { CofreIcone } from '@/components/CofreIcone';
 
 const NAV = [
   ['/', 'Dashboard', LayoutDashboard],
@@ -56,8 +56,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     <div className={`shell ${compacto ? 'compact' : ''}`}>
       <aside className={`side ${open ? 'open' : ''}`} id="sidebar-navigation">
         <div className="brand">
-          <Snowflake size={22} />
-          <b>EINSAN</b>
+          <CofreIcone size={30} />
+          <b>SAN</b>
           <small>Inteligência de estoque</small>
         </div>
 
@@ -102,7 +102,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <Menu size={20} />
           </button>
 
-          <h1>{atual?.[1] ?? 'Einsan'}</h1>
+          <h1>{atual?.[1] ?? 'San'}</h1>
 
           <form
             className="grow"
@@ -162,6 +162,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
         <main className="page">{children}</main>
       </div>
+
+      <SanAssistente />
 
       {msg && <div className="toast" role="status">{msg}</div>}
     </div>

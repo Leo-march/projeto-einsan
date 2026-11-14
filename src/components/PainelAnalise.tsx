@@ -62,7 +62,7 @@ const rotulosMovimento = {
 } as const;
 
 function SeloMotor({ versao }: { versao: string }) {
-  return <span className={styles.seloMotor}>Motor Einsan (regras {versao})</span>;
+  return <span className={styles.seloMotor}>Motor San (regras {versao})</span>;
 }
 
 function TextoTemperatura({ valor }: { valor: number | null }) {
@@ -459,7 +459,7 @@ export default function PainelAnalise({ analise }: Props) {
           )}
         </section>
       </div>
-      <footer className={styles.rodape}><span>Medical Security × Bulário Anvisa</span><span>Fonte dos indicadores: Motor Einsan · {meta.versao_regras}</span></footer>
+      <footer className={styles.rodape}><span>Medical Security × Bulário Anvisa</span><span>Fonte dos indicadores: Motor San · {meta.versao_regras}</span></footer>
     </main>
   );
 }

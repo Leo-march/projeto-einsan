@@ -1,0 +1,260 @@
+/* Ciclo de 8s: nariz escorre (0–66%) → inspira, espirra (70–84%) → volta ao normal. */
+.cabeca {
+    transform-origin: 32px 38px;
+    animation: cabeca 8s ease-in-out infinite
+}
+
+.corpo {
+    transform-origin: 32px 59px;
+    animation: corpo 8s ease-in-out infinite
+}
+
+.asaE {
+    transform-origin: 17px 36px;
+    animation: asaE 8s ease-in-out infinite
+}
+
+.asaD {
+    transform-origin: 47px 36px;
+    animation: asaD 8s ease-in-out infinite
+}
+
+.olhos {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: piscar 4s ease-in-out infinite
+}
+
+.apertar {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: apertar 8s ease-in-out infinite
+}
+
+.gota {
+    transform-origin: 34px 30.6px;
+    animation: escorrer 8s ease-in infinite
+}
+
+.g1,
+.g2,
+.g3,
+.g4,
+.g5 {
+    opacity: 0;
+    transform-origin: 32px 34px;
+    animation: borrifar 8s ease-out infinite
+}
+
+.g1 {
+    --dx: -11px;
+    --dy: 13px
+}
+
+.g2 {
+    --dx: 0px;
+    --dy: 17px
+}
+
+.g3 {
+    --dx: 11px;
+    --dy: 13px
+}
+
+.g4 {
+    --dx: -5px;
+    --dy: 19px
+}
+
+.g5 {
+    --dx: 6px;
+    --dy: 20px
+}
+
+@keyframes cabeca {
+
+    0%,
+    66% {
+        transform: rotate(0) translateY(0)
+    }
+
+    70% {
+        transform: rotate(-6deg) translateY(-1.2px)
+    }
+
+    74% {
+        transform: rotate(-8deg) translateY(-1.8px)
+    }
+
+    76% {
+        transform: rotate(9deg) translateY(1.6px)
+    }
+
+    80% {
+        transform: rotate(-2deg) translateY(0)
+    }
+
+    84%,
+    100% {
+        transform: rotate(0) translateY(0)
+    }
+}
+
+@keyframes corpo {
+
+    0%,
+    72% {
+        transform: scale(1, 1)
+    }
+
+    76% {
+        transform: scale(1.03, .96)
+    }
+
+    82%,
+    100% {
+        transform: scale(1, 1)
+    }
+}
+
+@keyframes asaE {
+
+    0%,
+    70% {
+        transform: rotate(0)
+    }
+
+    76% {
+        transform: rotate(14deg)
+    }
+
+    84%,
+    100% {
+        transform: rotate(0)
+    }
+}
+
+@keyframes asaD {
+
+    0%,
+    70% {
+        transform: rotate(0)
+    }
+
+    76% {
+        transform: rotate(-14deg)
+    }
+
+    84%,
+    100% {
+        transform: rotate(0)
+    }
+}
+
+@keyframes piscar {
+
+    0%,
+    90%,
+    100% {
+        transform: scaleY(1)
+    }
+
+    94% {
+        transform: scaleY(.1)
+    }
+}
+
+@keyframes apertar {
+
+    0%,
+    69% {
+        transform: scaleY(1)
+    }
+
+    72%,
+    79% {
+        transform: scaleY(.12)
+    }
+
+    83%,
+    100% {
+        transform: scaleY(1)
+    }
+}
+
+@keyframes escorrer {
+
+    0%,
+    6% {
+        transform: scaleY(0) translateY(0);
+        opacity: 1
+    }
+
+    52% {
+        transform: scaleY(1) translateY(0);
+        opacity: 1
+    }
+
+    58% {
+        transform: scaleY(1.15) translateY(0);
+        opacity: 1
+    }
+
+    66% {
+        transform: scaleY(1) translateY(9px);
+        opacity: 0
+    }
+
+    100% {
+        transform: scaleY(0) translateY(0);
+        opacity: 0
+    }
+}
+
+@keyframes borrifar {
+
+    0%,
+    75% {
+        opacity: 0;
+        transform: translate(0, 0) scale(.3)
+    }
+
+    77% {
+        opacity: 1
+    }
+
+    92%,
+    100% {
+        opacity: 0;
+        transform: translate(var(--dx), var(--dy)) scale(1)
+    }
+}
+
+@media (prefers-reduced-motion:reduce) {
+
+    .cabeca,
+    .corpo,
+    .asaE,
+    .asaD,
+    .olhos,
+    .apertar,
+    .gota,
+    .g1,
+    .g2,
+    .g3,
+    .g4,
+    .g5 {
+        animation: none
+    }
+
+    .gota {
+        transform: scaleY(.6)
+    }
+}
+
+/* Contorno claro suave para o pinguim (azul-marinho) continuar visível em fundos escuros */
+.svg {
+    display: block;
+    overflow: visible;
+    filter: drop-shadow(0 0 1px rgba(255, 255, 255, .95)) drop-shadow(0 0 1.6px rgba(255, 255, 255, .7))
+}
