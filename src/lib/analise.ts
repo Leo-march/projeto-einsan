@@ -15,6 +15,18 @@ import type {
   ParametrosCofre,
 } from "@/types/dominio";
 import { conciliarScanner, reconstruirEstoque } from "@/lib/estoque";
+import { calcularConsumoEQualidade } from "@/lib/consumo";
+import { escolherFornecedor } from "@/lib/fornecedores";
+import { calcularImpacto } from "@/lib/impacto";
+import { reconstruirRastreabilidade } from "@/lib/rastreabilidade";
+import {
+  DIAS_ADIAMENTO_SIMULACAO,
+  FATOR_FAIXA_QUANTIDADE_MAXIMA,
+  FATOR_FAIXA_QUANTIDADE_MINIMA,
+  HORIZONTE_COBERTURA_DIAS,
+  LIMIARES_URGENCIA,
+  MARGEM_INCERTEZA_POR_DIVERGENCIA,
+} from "@/lib/parametros";
 
 const MS_MIN = 60_000;
 const MS_DIA = 86_400_000;
@@ -459,7 +471,8 @@ export function gerarRecomendacoes(
 
     const enriquecida: RecomendacaoCompra = {
       ...recomendacao,
-      custo_estimado_brl: selecao.custo_estimado_brl,
+      // Sem fornecedor (não há cadastro de fornecedores na API), vale a regra do guia: quantidade × custo unitário.
+      custo_estimado_brl: selecao.fornecedor_recomendado ? selecao.custo_estimado_brl : recomendacao.quantidade_sugerida * item.custo_unitario_brl,
       preco_referencia_brl: referencia?.preco_referencia_brl ?? null,
       fonte_preco_referencia: referencia?.fonte ?? null,
       fornecedor_recomendado: selecao.fornecedor_recomendado,

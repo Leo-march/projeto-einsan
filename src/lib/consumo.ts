@@ -1,4 +1,4 @@
-import type { ConsumoHistorico, Movimentacao, QualidadeDados } from "@/types/dominio";
+import type { ConsumoHistorico, Movimentacao, QualidadeConsumo } from "@/types/dominio";
 import {
   FATOR_SAIDA_ATIPICA,
   JANELA_CONSUMO_CURTA_DIAS,
@@ -34,7 +34,7 @@ export function calcularConsumoEQualidade(
   referenciaMs: number,
   consumoFallback: number,
   divergenciasAbertas: number,
-): { consumo: ConsumoHistorico; qualidade: QualidadeDados } {
+): { consumo: ConsumoHistorico; qualidade: QualidadeConsumo } {
   const movimentosMedicamento = movimentacoes
     .filter((movimento) => movimento.id_medicamento === medicamentoId && movimento.cofre_id === cofreId)
     .filter((movimento) => Date.parse(movimento.timestamp) <= referenciaMs);
@@ -83,7 +83,7 @@ export function calcularConsumoEQualidade(
   const movimentacoesManuais = movimentosMedicamento.filter(
     (movimento) => Date.parse(movimento.timestamp) >= inicio30 && movimento.origem_registro !== "SCANNER",
   ).length;
-  let nivelConfianca: QualidadeDados["nivel_confianca"];
+  let nivelConfianca: QualidadeConsumo["nivel_confianca"];
   if (saidas30.length === 0 || percentualIdentificado < LIMIAR_CONFIANCA_BAIXA_PCT || diasHistorico < 14) {
     nivelConfianca = "BAIXO";
   } else if (percentualIdentificado < 100 || diasHistorico < JANELA_CONSUMO_LONGA_DIAS || movimentacoesManuais > 0 || divergenciasAbertas > 0) {

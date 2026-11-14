@@ -759,5 +759,28 @@
     "origem_registro": "SCANNER",
     "usuario_id": "USR-0017",
     "ref_evento_hardware": "EVT-018"
+  },
+  {
+    "id_movimentacao": "MOV-1794670774241",
+    "cofre_id": "COFRE-01",
+    "timestamp": "2026-11-14T15:39:34.241Z",
+    "tipo": "SAIDA_TRANSFERENCIA",
+    "id_medicamento": "MED-001",
+    "codigo_lote": "LOT-HUM-2301",
+    "quantidade": 1,
+    "origem_registro": "MANUAL"
+  },
+  {
+    "id_movimentacao": "MOV-1794670988007",
+    "cofre_id": "COFRE-01",
+    "timestamp": "2026-11-14T15:43:08.007Z",
+    "tipo": "ENTRADA_COMPRA",
+    "id_medicamento": "MED-001",
+    "codigo_lote": "LOT-HUM-2300",
+    "quantidade": 100,
+    "validade": "2026-12-01",
+    "contraparte": "jklvhuigyouivyol",
+    "documento": "khkgylbhklç",
+    "origem_registro": "MANUAL"
   }
 ]

@@ -1,36 +1,29 @@
 'use client';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useStore } from '@/context/Store';
-import { Badge, Card, DataTable, type Col } from '@/components/ui';
-import { fornecedores } from '@/data/mockData';
+import { Card, DataTable, Sel, type Col } from '@/components/ui';
+import { EstadoApi } from '@/components/AvisoApi';
 import { brl } from '@/utils/calculations';
-import type { Disp } from '@/types';
+import { fornecedores, type FornecedorLivro } from '@/utils/derivados';
+import { dataApiBR } from '@/utils/apiHelpers';
 
-type Row = { forn: string; preco: number; prazo: number; disp: Disp };
 export default function Fornecedores() {
-  const { meds } = useStore();
-  const [id, setId] = useState(meds[0]?.id ?? '');
-  const rows: Row[] = fornecedores.flatMap((f) => f.itens.filter((i) => i.medId === id).map((i) => ({ forn: f.nome, preco: i.preco, prazo: i.prazo, disp: i.disp })));
-  const rank = { Alta: 3, Média: 2, Baixa: 1 };
-  const cols: Col<Row>[] = [
-    { label: 'Fornecedor', val: (r) => r.forn, render: (r) => <b>{r.forn}</b> }, { label: 'Preço unitário', val: (r) => r.preco, render: (r) => brl(r.preco) },
-    { label: 'Prazo de entrega', val: (r) => r.prazo, render: (r) => `${r.prazo} dias` },
-    { label: 'Disponibilidade', val: (r) => rank[r.disp], render: (r) => <Badge tone={r.disp === 'Alta' ? 'ok' : r.disp === 'Média' ? 'warn' : 'crit'}>{r.disp}</Badge> },
+  const { estoque, movs, custo } = useStore();
+  const [id, setId] = useState('Todos');
+  const nome = (m: string) => estoque?.itens.find((i) => i.id_medicamento === m)?.nome ?? m;
+  const rows = useMemo(() => fornecedores(movs, custo, id === 'Todos' ? undefined : id), [movs, custo, id]);
+  const cols: Col<FornecedorLivro>[] = [
+    { label: 'Fornecedor', val: (f) => f.nome, render: (f) => <b>{f.nome}</b> }, { label: 'Entradas de compra', val: (f) => f.entradas }, { label: 'Unidades', val: (f) => f.unidades },
+    { label: 'Valor estimado', val: (f) => f.total, render: (f) => brl(f.total) }, { label: 'Última entrada', val: (f) => f.ultima, render: (f) => dataApiBR(f.ultima) },
+    { label: 'Medicamentos', val: (f) => f.meds.length, render: (f) => f.meds.map(nome).join(', ') },
   ];
   return (
     <>
-      <Card title="Comparar fornecedores" action={<select aria-label="Medicamento" value={id} onChange={(e) => setId(e.target.value)}>{meds.map((m) => <option key={m.id} value={m.id}>{m.nome}</option>)}</select>}>
-        <p className="note">Nenhum fornecedor é pré-selecionado. A melhor escolha depende da urgência: para reposição imediata, prazo e disponibilidade tendem a pesar mais que o preço. Ordene as colunas para comparar.</p>
-        <DataTable rows={rows} cols={cols} pageSize={6} />
+      <EstadoApi ok={!!estoque} />
+      <Card title="Fornecedores com entradas registradas" action={<Sel label="Medicamento" value={id} onChange={setId} opts={['Todos', ...(estoque?.itens.map((i) => i.id_medicamento) ?? [])]} />}>
+        <p className="note">Fornecedores são as contrapartes das entradas de compra no livro de movimentações. A API não tem preço, prazo de entrega, disponibilidade nem pontualidade; o valor é estimado (quantidade × custo unitário do cofre).</p>
+        <DataTable rows={rows} cols={cols} pageSize={8} />
       </Card>
-      <div className="grid g2">
-        {fornecedores.map((f) => (
-          <Card key={f.id} title={f.nome} action={<Badge tone={f.pontual >= 95 ? 'ok' : f.pontual >= 85 ? 'warn' : 'crit'}>{f.pontual}% no prazo</Badge>}>
-            <dl className="dl" style={{ marginBottom: 12 }}><div><dt>CNPJ (fictício)</dt><dd>{f.cnpj}</dd></div><div><dt>Condições de pagamento</dt><dd>{f.pagamento}</dd></div><div><dt>Histórico</dt><dd>{f.hist}</dd></div></dl>
-            <p style={{ color: 'var(--mu)', fontSize: 13 }}>Fornece: {f.itens.map((i) => meds.find((m) => m.id === i.medId)?.nome).filter(Boolean).join(', ')}.</p>
-          </Card>
-        ))}
-      </div>
     </>
   );
 }

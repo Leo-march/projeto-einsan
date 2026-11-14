@@ -2,11 +2,9 @@
 import { useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Package, Pill, ArrowLeftRight, LineChart, ShoppingCart, Truck, CalendarClock, FileBarChart, Settings, LogOut, Bell, Menu, Snowflake } from 'lucide-react';
+import { LayoutDashboard, Package, Pill, ArrowLeftRight, LineChart, ShoppingCart, Truck, CalendarClock, FileBarChart, Settings, Bell, Menu, Snowflake } from 'lucide-react';
 import { useStore } from '@/context/Store';
 import { Badge, SearchBox } from '@/components/ui';
-import { EMPRESA, USUARIO, movs, lotes } from '@/data/mockData';
-import { gerarAlertas } from '@/utils/calculations';
 import { alertasDaApi } from '@/utils/apiHelpers';
 
 const NAV = [
@@ -17,19 +15,19 @@ const NAV = [
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const path = usePathname();
-  const { meds, msg, toast, analise } = useStore();
+  const { msg, analise } = useStore();
   const [open, setOpen] = useState(false);
   const [bell, setBell] = useState(false);
   const [q, setQ] = useState('');
-  const alertas = analise ? alertasDaApi(analise) : gerarAlertas(meds, lotes, movs.filter((m) => m.tipo === 'Ajuste'));
+  const alertas = analise ? alertasDaApi(analise) : [];
+  const cofre = analise?.meta.cofre_id ?? 'Cofre';
   const atual = NAV.find(([h]) => (h === '/' ? path === '/' : path.startsWith(h)));
   return (
     <div className="shell">
       <aside className={`side ${open ? 'open' : ''}`}>
         <div className="brand"><Snowflake size={22} /><b>EINSAN</b><small>Inteligência de estoque</small></div>
         <nav>{NAV.map(([h, l, I]) => <Link key={h} href={h} onClick={() => setOpen(false)} className={atual?.[0] === h ? 'on' : ''}><I size={18} />{l}</Link>)}</nav>
-        <div className="user"><div className="avatar">MD</div><div><b>{USUARIO}</b><span>{EMPRESA}</span></div>
-          <button className="icon-btn" aria-label="Sair" onClick={() => toast('Sessão de demonstração: saída apenas visual')}><LogOut size={18} /></button></div>
+        <div className="user"><div className="avatar">CI</div><div><b>{cofre}</b><span>Cofre inteligente</span></div></div>
       </aside>
       {open && <div className="scrim" onClick={() => setOpen(false)} />}
       <div className="main">
@@ -41,7 +39,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <button className="icon-btn" aria-label="Notificações" onClick={() => setBell(!bell)}><Bell size={20} />{alertas.length > 0 && <i className="dot">{alertas.length}</i>}</button>
             {bell && <div className="pop">{alertas.slice(0, 5).map((a, i) => <div key={i}><Badge tone={a.tone}>{a.grav}</Badge><b>{a.med}</b><p>{a.texto}</p></div>)}<Link href="/" onClick={() => setBell(false)}>Ver todos no dashboard</Link></div>}
           </div>
-          <div className="who"><div className="avatar">MD</div><div><b>{USUARIO}</b><span>{EMPRESA}</span></div></div>
+          <div className="who"><div className="avatar">CI</div><div><b>{cofre}</b><span>{analise ? `Ref. ${new Date(analise.meta.data_referencia).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}` : 'Carregando…'}</span></div></div>
         </header>
         <main className="page">{children}</main>
       </div>

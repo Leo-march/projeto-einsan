@@ -1,48 +1,62 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { Package, Wallet, AlertTriangle } from 'lucide-react';
 import { useStore } from '@/context/Store';
-import { Badge, Card, DataTable, Modal, SearchBox, Sel, type Col } from '@/components/ui';
-import { lotes } from '@/data/mockData';
-import { dataBR, diasPara, proxVal, sitLote, sitTone, situacao } from '@/utils/calculations';
-import type { Med } from '@/types';
+import { Badge, Card, DataTable, Kpi, Modal, SearchBox, Sel, type Col } from '@/components/ui';
+import { AvisosQualidade, EstadoApi } from '@/components/AvisoApi';
+import { brl } from '@/utils/calculations';
+import { dataApiBR, loteLabel, loteTone } from '@/utils/apiHelpers';
+import type { ItemEstoqueApi, StatusLoteApi } from '@/types/api';
+
+const pior = (i: ItemEstoqueApi): StatusLoteApi => (['INVALIDADO_TERMICO', 'VENCIDO', 'VENCE_EM_30_DIAS'] as StatusLoteApi[]).find((s) => i.lotes.some((l) => l.status === s)) ?? 'OK';
+const cobertura = (i: ItemEstoqueApi) => (i.consumo_medio_diario > 0 ? Math.round((i.saldo_registrado / i.consumo_medio_diario) * 10) / 10 : null);
 
 export default function Estoque() {
-  const { meds } = useStore();
-  const [q, setQ] = useState(''), [cat, setCat] = useState('Todas'), [sit, setSit] = useState('Todas'), [val, setVal] = useState('Todas');
-  const [sel, setSel] = useState<Med | null>(null);
+  const { estoque } = useStore();
+  const [q, setQ] = useState(''), [sit, setSit] = useState('Todas');
+  const [sel, setSel] = useState<string | null>(null);
   useEffect(() => setQ(new URLSearchParams(location.search).get('q') ?? ''), []);
-  const rows = useMemo(() => meds.filter((m) => {
-    const d = diasPara(proxVal(m.id, lotes) ?? '2099-01-01');
-    return (m.nome + m.id).toLowerCase().includes(q.toLowerCase()) && (cat === 'Todas' || m.cat === cat) && (sit === 'Todas' || situacao(m) === sit)
-      && (val === 'Todas' || (val === 'Vencidos' ? d < 0 : val === 'Até 30 dias' ? d <= 30 : d <= 60));
-  }), [meds, q, cat, sit, val]);
-  const cols: Col<Med>[] = [
-    { label: 'Medicamento', val: (m) => m.nome, render: (m) => <b>{m.nome}</b> },
-    { label: 'Código', val: (m) => m.id }, { label: 'Categoria', val: (m) => m.cat },
-    { label: 'Quantidade', val: (m) => m.estoque }, { label: 'Unidade', val: (m) => m.un },
-    { label: 'Lote (mais próximo)', val: (m) => lotes.filter((l) => l.medId === m.id).sort((a, b) => a.val.localeCompare(b.val))[0]?.lote ?? '-' },
-    { label: 'Validade', val: (m) => proxVal(m.id, lotes) ?? '', render: (m) => { const v = proxVal(m.id, lotes); return v ? <>{dataBR(v)} <Badge tone={sitTone(sitLote(v))}>{sitLote(v) === 'Normal' ? 'No prazo' : sitLote(v)}</Badge></> : '-'; } },
-    { label: 'Consumo/dia', val: (m) => m.consumo },
-    { label: 'Situação', val: (m) => situacao(m), render: (m) => <Badge tone={sitTone(situacao(m))}>{situacao(m)}</Badge> },
+  const itens = estoque?.itens ?? [];
+  const rows = useMemo(() => itens.filter((i) => (i.nome + i.id_medicamento).toLowerCase().includes(q.toLowerCase()) && (sit === 'Todas' || pior(i) === sit)), [itens, q, sit]);
+  const aberto = itens.find((i) => i.id_medicamento === sel);
+  const cols: Col<ItemEstoqueApi>[] = [
+    { label: 'Medicamento', val: (i) => i.nome, render: (i) => <b>{i.nome}</b> },
+    { label: 'Código', val: (i) => i.id_medicamento },
+    { label: 'Saldo (un.)', val: (i) => i.saldo_registrado },
+    { label: 'Valor imobilizado', val: (i) => i.valor_imobilizado_brl, render: (i) => brl(i.valor_imobilizado_brl) },
+    { label: 'Lote mais próximo', val: (i) => i.lotes[0]?.codigo_lote ?? '-' },
+    { label: 'Validade', val: (i) => i.lotes[0]?.validade ?? '', render: (i) => i.lotes[0] ? dataApiBR(i.lotes[0].validade) : '-' },
+    { label: 'Consumo/dia', val: (i) => i.consumo_medio_diario },
+    { label: 'Cobertura', val: (i) => cobertura(i) ?? 9999, render: (i) => { const c = cobertura(i); return c === null ? 'Sem consumo' : `${c} dias`; } },
+    { label: 'Situação', val: (i) => pior(i), render: (i) => <Badge tone={loteTone[pior(i)]}>{loteLabel[pior(i)]}</Badge> },
   ];
   return (
-    <Card>
-      <div className="bar">
-        <SearchBox value={q} onChange={setQ} placeholder="Nome ou código" />
-        <Sel label="Categoria" value={cat} onChange={setCat} opts={['Todas', ...Array.from(new Set(meds.map((m) => m.cat)))]} />
-        <Sel label="Situação" value={sit} onChange={setSit} opts={['Todas', 'Normal', 'Baixo', 'Crítico']} />
-        <Sel label="Validade" value={val} onChange={setVal} opts={['Todas', 'Até 60 dias', 'Até 30 dias', 'Vencidos']} />
-      </div>
-      <DataTable rows={rows} cols={cols} onRow={setSel} />
-      {sel && (
-        <Modal title={sel.nome} onClose={() => setSel(null)} wide>
-          <dl className="dl">{([['Código', sel.id], ['Fabricante', sel.fab], ['Temperatura', sel.temp], ['Em estoque', `${sel.estoque} ${sel.un}(s)`], ['Estoque mínimo', sel.min], ['Estoque de segurança', sel.seg], ['Consumo médio', `${sel.consumo}/dia`], ['Prazo de reposição', `${sel.prazo} dias`]] as [string, string | number][]).map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}</dl>
-          <h4 style={{ margin: '18px 0 6px' }}>Lotes (FEFO: vence primeiro, sai primeiro)</h4>
-          <div className="list">{lotes.filter((l) => l.medId === sel.id).sort((a, b) => a.val.localeCompare(b.val)).map((l) => <div key={l.id}><div className="grow"><b>{l.lote}</b><p>{l.qtd} un. · validade {dataBR(l.val)}</p></div><Badge tone={sitTone(sitLote(l.val))}>{sitLote(l.val)}</Badge></div>)}</div>
-          <div className="acts"><Link className="btn pri" href={`/previsao?m=${sel.id}`}>Ver previsão de demanda</Link></div>
-        </Modal>
+    <>
+      <EstadoApi ok={!!estoque} />
+      {estoque && (
+        <div className="grid g6" style={{ marginBottom: 16 }}>
+          <Kpi icon={<Package size={20} />} label="Unidades em estoque" value={String(estoque.totais.unidades)} />
+          <Kpi icon={<Wallet size={20} />} label="Valor imobilizado" value={brl(estoque.totais.valor_imobilizado_brl)} />
+          <Kpi icon={<AlertTriangle size={20} />} label="Lotes em alerta" value={String(estoque.totais.lotes_em_alerta)} tone={estoque.totais.lotes_em_alerta ? 'warn' : 'ok'} />
+        </div>
       )}
-    </Card>
+      <Card>
+        <div className="bar">
+          <SearchBox value={q} onChange={setQ} placeholder="Nome ou código" />
+          <Sel label="Situação" value={sit} onChange={setSit} opts={['Todas', 'OK', 'VENCE_EM_30_DIAS', 'VENCIDO', 'INVALIDADO_TERMICO']} />
+        </div>
+        <DataTable rows={rows} cols={cols} onRow={(i) => setSel(i.id_medicamento)} />
+        {estoque && <AvisosQualidade avisos={estoque.qualidade_dados.avisos} />}
+        {aberto && (
+          <Modal title={aberto.nome} onClose={() => setSel(null)} wide>
+            <dl className="dl">{([['Código', aberto.id_medicamento], ['Saldo registrado', `${aberto.saldo_registrado} un.`], ['Valor imobilizado', brl(aberto.valor_imobilizado_brl)], ['Consumo médio', `${aberto.consumo_medio_diario}/dia`]] as [string, string][]).map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}</dl>
+            <h4 style={{ margin: '18px 0 6px' }}>Lotes (FEFO: vence primeiro, sai primeiro)</h4>
+            <div className="list">{aberto.lotes.map((l) => <div key={l.codigo_lote}><div className="grow"><b>{l.codigo_lote}</b><p>{l.quantidade} un. · validade {dataApiBR(l.validade)} · {l.dias_para_vencer} dias</p></div><Badge tone={loteTone[l.status]}>{loteLabel[l.status]}</Badge></div>)}</div>
+            <div className="acts"><Link className="btn pri" href={`/movimentacoes?m=${aberto.id_medicamento}`}>Ver movimentações</Link></div>
+          </Modal>
+        )}
+      </Card>
+    </>
   );
 }

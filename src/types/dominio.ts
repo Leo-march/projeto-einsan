@@ -88,14 +88,14 @@ export interface DadosFornecedores {
   fornecedores: Fornecedor[];
 }
 
-export type TipoMovimentacao = "ENTRADA" | "SAIDA" | "DISPENSACAO" | "TRANSFERENCIA" | "AJUSTE";
+export type TipoMovimentoLegado = "ENTRADA" | "SAIDA" | "DISPENSACAO" | "TRANSFERENCIA" | "AJUSTE";
 export type OrigemMovimentacao = "SCANNER" | "MANUAL" | "SEM_LEITURA";
 
 export interface Movimentacao {
   id_movimento: string;
   timestamp: string;
   cofre_id: string;
-  tipo: TipoMovimentacao;
+  tipo: TipoMovimentoLegado;
   id_medicamento: string;
   codigo_lote: string | null;
   quantidade: number;
@@ -190,7 +190,7 @@ export interface RecomendacaoCompra {
   justificativa_quantidade: string[];
   previsao: PrevisaoItem;
   consumo: ConsumoHistorico;
-  qualidade_dados: QualidadeDados;
+  qualidade_dados: QualidadeConsumo;
   faixa_quantidade: FaixaQuantidade | null;
   impacto: ImpactoItem;
   rastreabilidade: RastreabilidadeMedicamento;
@@ -279,7 +279,7 @@ export interface ConsumoHistorico {
   justificativa_fallback: string | null;
 }
 
-export interface QualidadeDados {
+export interface QualidadeConsumo {
   percentual_saidas_lote_identificado: number;
   dias_historico: number;
   movimentacoes_manuais_ou_sem_leitura: number;

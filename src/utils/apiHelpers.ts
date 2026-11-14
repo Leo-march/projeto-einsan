@@ -1,6 +1,6 @@
 import type { AnaliseApi, UrgenciaApi } from '@/types/api';
 import type { Tone } from '@/types';
-import type { Alerta } from '@/utils/calculations';
+export type Alerta = { med: string; texto: string; grav: 'Crítica' | 'Alta' | 'Média'; tone: Tone };
 
 export const urgTone = (u: UrgenciaApi): Tone => ({ CRITICA: 'crit', ALTA: 'warn', MEDIA: 'warn', BAIXA: 'mute' } as Record<string, Tone>)[u] ?? 'mute';
 export const urgLabel: Record<string, string> = { CRITICA: 'Crítica', ALTA: 'Alta', MEDIA: 'Média', BAIXA: 'Baixa' };
@@ -17,3 +17,12 @@ export function alertasDaApi(a: AnaliseApi): Alerta[] {
   const ord = { Crítica: 0, Alta: 1, Média: 2 };
   return [...t, ...m].sort((x, y) => ord[x.grav] - ord[y.grav]);
 }
+
+import type { StatusLoteApi, TipoMovApi } from '@/types/api';
+export const loteTone: Record<StatusLoteApi, Tone> = { OK: 'ok', VENCE_EM_30_DIAS: 'warn', VENCIDO: 'crit', INVALIDADO_TERMICO: 'crit' };
+export const loteLabel: Record<StatusLoteApi, string> = { OK: 'No prazo', VENCE_EM_30_DIAS: 'Vence em até 30 dias', VENCIDO: 'Vencido', INVALIDADO_TERMICO: 'Invalidado (térmico)' };
+export const tipoMovLabel: Record<TipoMovApi, string> = { ENTRADA_COMPRA: 'Entrada (compra)', ENTRADA_TRANSFERENCIA: 'Entrada (transferência)', SAIDA_DISPENSACAO: 'Dispensação', SAIDA_TRANSFERENCIA: 'Saída (transferência)', SAIDA_DESCARTE: 'Descarte', AJUSTE_INVENTARIO: 'Ajuste de inventário' };
+export const tipoMovTone: Record<TipoMovApi, Tone> = { ENTRADA_COMPRA: 'ok', ENTRADA_TRANSFERENCIA: 'ok', SAIDA_DISPENSACAO: 'info', SAIDA_TRANSFERENCIA: 'mute', SAIDA_DESCARTE: 'crit', AJUSTE_INVENTARIO: 'warn' };
+/** Sinal exibido: entradas somam, saídas subtraem, ajuste mantém o sinal enviado. */
+export const qtdComSinal = (tipo: TipoMovApi, q: number) => (tipo.startsWith('ENTRADA') ? `+${q}` : tipo.startsWith('SAIDA') ? `-${q}` : q > 0 ? `+${q}` : String(q));
+export const dataApiBR = (iso: string) => new Date(iso.length > 10 ? iso : `${iso}T12:00:00-03:00`).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
