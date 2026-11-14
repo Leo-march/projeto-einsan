@@ -7,7 +7,7 @@ import { useStore } from '@/context/Store';
 import { Badge, Card, DataTable, Modal, Sel, type Col } from '@/components/ui';
 import { buscarMovimentacoes, registrarMovimentacao, ApiError } from '@/services/api';
 import { dataHoraBR, loteLabel, qtdComSinal, tipoMovLabel, tipoMovTone } from '@/utils/apiHelpers';
-import type { MovimentacaoApi, NovaMovimentacao, OrigemApi, TipoMovApi } from '@/types/api';
+import type { MovimentacaoApi, NovaMovimentacao, TipoMovApi } from '@/types/api';
 
 // Todos os tipos continuam disponíveis no filtro da tabela.
 const TIPOS = Object.keys(tipoMovLabel) as TipoMovApi[];
@@ -30,11 +30,24 @@ export default function Movimentacoes() {
   const { estoque, recarregarApi, toast } = useStore();
 
   const itens = estoque?.itens ?? [];
-  const nomeDe = (id: string) => itens.find((i) => i.id_medicamento === id)?.nome ?? id;
-  const lotesDoMed = (id: string) => itens.find((i) => i.id_medicamento === id)?.lotes ?? [];
-  const [tipo, setTipo] = useState('Todos'), [med, setMed] = useState('Todos'), [de, setDe] = useState(''), [ate, setAte] = useState('');
-  const [rows, setRows] = useState<MovimentacaoApi[]>([]), [carr, setCarr] = useState(true), [erro, setErro] = useState('');
-  const [form, setForm] = useState<NovaMovimentacao | null>(null), [enviando, setEnviando] = useState(false), [erroForm, setErroForm] = useState('');
+  const nomeDe = (id: string) =>
+    itens.find((i) => i.id_medicamento === id)?.nome ?? id;
+
+  const lotesDoMed = (id: string) =>
+    itens.find((i) => i.id_medicamento === id)?.lotes ?? [];
+
+  const [tipo, setTipo] = useState('Todos'),
+    [med, setMed] = useState('Todos'),
+    [de, setDe] = useState(''),
+    [ate, setAte] = useState('');
+
+  const [rows, setRows] = useState<MovimentacaoApi[]>([]),
+    [carr, setCarr] = useState(true),
+    [erro, setErro] = useState('');
+
+  const [form, setForm] = useState<NovaMovimentacao | null>(null),
+    [enviando, setEnviando] = useState(false),
+    [erroForm, setErroForm] = useState('');
 
   // Recupera o medicamento informado pela URL, quando existir.
   useEffect(() => {
@@ -250,18 +263,168 @@ export default function Movimentacoes() {
           wide
         >
           <div className="form">
-            <label>Tipo<select value={form.tipo} onChange={(e) => setForm((f) => f ? { ...f, tipo: e.target.value as TipoMovApi, id_recebimento: undefined } : f)}>{TIPOS.map((t) => <option key={t} value={t}>{tipoMovLabel[t]}</option>)}</select></label>
-            <label>Medicamento<select value={form.id_medicamento} onChange={(e) => setForm((f) => f ? { ...f, id_medicamento: e.target.value, codigo_lote: '', id_recebimento: undefined } : f)}>{itens.map((i) => <option key={i.id_medicamento} value={i.id_medicamento}>{i.nome}</option>)}</select></label>
-            <label>Lote<input value={form.codigo_lote} onChange={(e) => setForm((f) => f ? { ...f, codigo_lote: e.target.value, id_recebimento: undefined } : f)} list="lotes-do-med" />
-              <datalist id="lotes-do-med">{lotesDoMed(form.id_medicamento).map((l) => <option key={l.id_recebimento} value={l.codigo_lote} label={`Recebido em ${dataHoraBR(l.primeira_entrada)}`} />)}</datalist></label>
-            {!form.tipo.startsWith('ENTRADA') && <label>Recebimento de origem<select value={form.id_recebimento ?? ''} onChange={(e) => set('id_recebimento', e.target.value || undefined)}><option value="">Selecione o recebimento</option>{lotesDoMed(form.id_medicamento).filter((l) => l.codigo_lote === form.codigo_lote).map((l) => <option key={l.id_recebimento} value={l.id_recebimento}>{l.codigo_lote} · {dataHoraBR(l.primeira_entrada)} · {l.quantidade} un. · {loteLabel[l.status]}</option>)}</select></label>}
-            <label>Quantidade{form.tipo === 'AJUSTE_INVENTARIO' ? ' (negativa reduz)' : ''}<input type="number" step={1} value={form.quantidade} onChange={(e) => set('quantidade', Math.trunc(+e.target.value))} /></label>
-            {form.tipo.startsWith('ENTRADA') && <label>Validade (obrigatória em cada recebimento)<input type="date" value={form.validade ?? ''} onChange={(e) => set('validade', e.target.value)} /></label>}
-            <label>Origem do registro<select value={form.origem_registro} onChange={(e) => set('origem_registro', e.target.value as OrigemApi)}>{ORIGENS.map((o) => <option key={o}>{o}</option>)}</select></label>
-            <label>Documento<input value={form.documento ?? ''} onChange={(e) => set('documento', e.target.value)} /></label>
-            <label>Contraparte<input value={form.contraparte ?? ''} onChange={(e) => set('contraparte', e.target.value)} /></label>
-            {erroForm && <p className="note full" role="alert">{erroForm}</p>}
-            <div className="acts full"><button className="btn" disabled={enviando} onClick={() => setForm(null)}>Cancelar</button><button className="btn pri" disabled={enviando} onClick={() => void enviar()}>{enviando ? 'Enviando…' : 'Registrar'}</button></div>
+            <label>
+              Tipo
+              <select
+                value={form.tipo}
+                onChange={(e) =>
+                  setForm((f) =>
+                    f
+                      ? {
+                          ...f,
+                          tipo: e.target.value as TipoMovApi,
+                          id_recebimento: undefined,
+                        }
+                      : f
+                  )
+                }
+              >
+                {TIPOS_FORM.map((t) => (
+                  <option key={t} value={t}>
+                    {tipoMovLabel[t]}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label>
+              Medicamento
+              <select
+                value={form.id_medicamento}
+                onChange={(e) =>
+                  setForm((f) =>
+                    f
+                      ? {
+                          ...f,
+                          id_medicamento: e.target.value,
+                          codigo_lote: '',
+                          id_recebimento: undefined,
+                        }
+                      : f
+                  )
+                }
+              >
+                {itens.map((i) => (
+                  <option key={i.id_medicamento} value={i.id_medicamento}>
+                    {i.nome}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label>
+              Lote
+              <input
+                value={form.codigo_lote}
+                onChange={(e) =>
+                  setForm((f) =>
+                    f
+                      ? {
+                          ...f,
+                          codigo_lote: e.target.value,
+                          id_recebimento: undefined,
+                        }
+                      : f
+                  )
+                }
+                list="lotes-do-med"
+              />
+              <datalist id="lotes-do-med">
+                {lotesDoMed(form.id_medicamento).map((l) => (
+                  <option
+                    key={l.id_recebimento}
+                    value={l.codigo_lote}
+                    label={`Recebido em ${dataHoraBR(l.primeira_entrada)}`}
+                  />
+                ))}
+              </datalist>
+            </label>
+
+            {!form.tipo.startsWith('ENTRADA') && (
+              <label>
+                Recebimento de origem
+                <select
+                  value={form.id_recebimento ?? ''}
+                  onChange={(e) =>
+                    set('id_recebimento', e.target.value || undefined)
+                  }
+                >
+                  <option value="">Selecione o recebimento</option>
+                  {lotesDoMed(form.id_medicamento)
+                    .filter((l) => l.codigo_lote === form.codigo_lote)
+                    .map((l) => (
+                      <option key={l.id_recebimento} value={l.id_recebimento}>
+                        {l.codigo_lote} · {dataHoraBR(l.primeira_entrada)} ·{' '}
+                        {l.quantidade} un. · {loteLabel[l.status]}
+                      </option>
+                    ))}
+                </select>
+              </label>
+            )}
+
+            <label>
+              Quantidade
+              <input
+                type="number"
+                step={1}
+                value={form.quantidade}
+                onChange={(e) =>
+                  set('quantidade', Math.trunc(+e.target.value))
+                }
+              />
+            </label>
+
+            {form.tipo.startsWith('ENTRADA') && (
+              <label>
+                Validade (obrigatória em cada recebimento)
+                <input
+                  type="date"
+                  value={form.validade ?? ''}
+                  onChange={(e) => set('validade', e.target.value)}
+                />
+              </label>
+            )}
+
+            <label>
+              Quem fez
+              <input
+                value={form.usuario_id ?? ''}
+                onChange={(e) => set('usuario_id', e.target.value)}
+              />
+            </label>
+
+            <label className="full">
+              Por que fez
+              <textarea
+                rows={3}
+                value={form.observacao ?? ''}
+                onChange={(e) => set('observacao', e.target.value)}
+              />
+            </label>
+
+            {erroForm && (
+              <p className="note full" role="alert">
+                {erroForm}
+              </p>
+            )}
+
+            <div className="acts full">
+              <button
+                className="btn"
+                disabled={enviando}
+                onClick={() => setForm(null)}
+              >
+                Cancelar
+              </button>
+
+              <button
+                className="btn pri"
+                disabled={enviando}
+                onClick={() => void enviar()}
+              >
+                {enviando ? 'Enviando…' : 'Registrar'}
+              </button>
+            </div>
           </div>
         </Modal>
       )}

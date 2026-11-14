@@ -794,5 +794,19 @@
     "usuario_id": "Goku",
     "origem_registro": "MANUAL",
     "observacao": "porque ele é melhor"
+  },
+  {
+    "id_movimentacao": "MOV-1794679443892",
+    "cofre_id": "COFRE-01",
+    "timestamp": "2026-11-14T18:05:00.000Z",
+    "tipo": "ENTRADA_COMPRA",
+    "id_medicamento": "MED-001",
+    "codigo_lote": "LOT-HUM-2300",
+    "id_recebimento": "MOV-1794679443892",
+    "quantidade": 1000,
+    "validade": "2030-11-01",
+    "usuario_id": "Goku",
+    "origem_registro": "MANUAL",
+    "observacao": "Porque ele é o goat"
   }
 ]
