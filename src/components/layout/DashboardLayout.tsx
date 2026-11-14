@@ -53,8 +53,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   );
 
   return (
-    <div className="shell">
-      <aside className={`side ${open ? 'open' : ''}`}>
+    <div className={`shell ${compacto ? 'compact' : ''}`}>
+      <aside className={`side ${open ? 'open' : ''}`} id="sidebar-navigation">
         <div className="brand">
           <Snowflake size={22} />
           <b>EINSAN</b>
@@ -62,15 +62,17 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         </div>
 
         <nav>
-          {NAV.filter(([h]) => !compacto || atual?.[0] === h).map(([h, l, I]) => (
+          {NAV.map(([h, l, I]) => (
             <Link
               key={h}
               href={h}
               onClick={() => setOpen(false)}
               className={atual?.[0] === h ? 'on' : ''}
+              title={compacto ? l : undefined}
+              aria-label={compacto ? l : undefined}
             >
               <I size={18} />
-              {l}
+              <span>{l}</span>
             </Link>
           ))}
         </nav>
